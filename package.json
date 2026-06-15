@@ -1,0 +1,16 @@
+{
+  "name": "scan-form",
+  "version": "1.0.0",
+  "description": "手机扫码填表单审核系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "qrcode": "^1.5.3"
+  }
+}

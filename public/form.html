@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>月月贷</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="form-body">
+
+  <!-- ====== 顶部 ====== -->
+  <div class="form-topbar">
+    <span class="tb-title">📋 填写资料</span>
+  </div>
+
+  <div class="form-scroll">
+
+    <!-- 一、身份证信息 -->
+    <div class="card section-card">
+      <div class="sec-head">
+        <span class="sec-icon">🆔</span><span class="sec-title">身份证信息</span>
+      </div>
+      <div class="form-item">
+        <label class="flb"><span class="star">*</span>姓名</label>
+        <input class="finp" id="name" placeholder="请输入姓名" />
+      </div>
+      <div class="form-row">
+        <div class="form-item fhalf">
+          <label class="flb"><span class="star">*</span>身份证号</label>
+          <input class="finp" id="idCard" placeholder="18位号码" maxlength="18" />
+        </div>
+        <div class="form-item fhalf">
+          <label class="flb"><span class="star">*</span>性别</label>
+          <div class="rtags" id="genderGroup">
+            <span class="rtag" data-val="男">男</span>
+            <span class="rtag" data-val="女">女</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-item fhalf">
+          <label class="flb"><span class="star">*</span>民族</label>
+          <div class="sel-wrap" id="nationWrap">
+            <input class="finp sel-inp" id="nation" placeholder="请选择" readonly />
+            <span class="sel-arr">▾</span>
+            <div class="sel-drop" id="nationList"></div>
+          </div>
+        </div>
+        <div class="form-item fhalf">
+          <label class="flb"><span class="star">*</span>出生日期</label>
+          <input class="finp" id="birthday" type="date" />
+        </div>
+      </div>
+      <div class="form-item">
+        <label class="flb">身份证有效期</label>
+        <div class="rtags" id="idValidGroup">
+          <span class="rtag" data-val="长期">长期</span>
+          <span class="rtag" data-val="10年">10年</span>
+          <span class="rtag" data-val="20年">20年</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 二、单位信息 -->
+    <div class="card section-card">
+      <div class="sec-head">
+        <span class="sec-icon">🏢</span><span class="sec-title">单位信息</span>
+      </div>
+      <div class="form-item">
+        <label class="flb"><span class="star">*</span>单位全称</label>
+        <input class="finp" id="company" placeholder="请输入单位完整名称" />
+      </div>
+      <div class="form-item">
+        <label class="flb">统一社会信用代码</label>
+        <input class="finp" id="creditCode" placeholder="18位信用代码（选填）" maxlength="18" />
+      </div>
+      <div class="form-row">
+        <div class="form-item fhalf">
+          <label class="flb"><span class="star">*</span>职位/职务</label>
+          <input class="finp" id="position" placeholder="请输入" />
+        </div>
+        <div class="form-item fhalf">
+          <label class="flb">工号</label>
+          <input class="finp" id="jobNumber" placeholder="选填" />
+        </div>
+      </div>
+      <div class="form-item">
+        <label class="flb">单位电话</label>
+        <input class="finp" id="companyPhone" placeholder="单位座机（选填）" />
+      </div>
+    </div>
+
+    <!-- 三、住址信息 -->
+    <div class="card section-card">
+      <div class="sec-head">
+        <span class="sec-icon">🏠</span><span class="sec-title">住址信息</span>
+      </div>
+      <div class="form-row">
+        <div class="form-item fthird">
+          <label class="flb"><span class="star">*</span>省</label>
+          <div class="sel-wrap" id="pWrap">
+            <input class="finp sel-inp" id="province" placeholder="省" readonly />
+            <span class="sel-arr">▾</span>
+            <div class="sel-drop" id="provinceList"></div>
+          </div>
+        </div>
+        <div class="form-item fthird">
+          <label class="flb"><span class="star">*</span>市</label>
+          <div class="sel-wrap" id="cWrap">
+            <input class="finp sel-inp" id="city" placeholder="市" readonly />
+            <span class="sel-arr">▾</span>
+            <div class="sel-drop" id="cityList"></div>
+          </div>
+        </div>
+        <div class="form-item fthird">
+          <label class="flb"><span class="star">*</span>区/县</label>
+          <div class="sel-wrap" id="dWrap">
+            <input class="finp sel-inp" id="district" placeholder="区" readonly />
+            <span class="sel-arr">▾</span>
+            <div class="sel-drop" id="districtList"></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-item">
+        <label class="flb"><span class="star">*</span>详细地址</label>
+        <input class="finp" id="address" placeholder="街道/小区/门牌号" />
+      </div>
+      <div class="form-item">
+        <label class="flb">居住类型</label>
+        <div class="rtags" id="liveTypeGroup">
+          <span class="rtag" data-val="自有住宅">自有住宅</span>
+          <span class="rtag" data-val="租赁">租赁</span>
+          <span class="rtag" data-val="单位宿舍">单位宿舍</span>
+          <span class="rtag" data-val="其他">其他</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 四、联系人信息 -->
+    <div class="card section-card">
+      <div class="sec-head">
+        <span class="sec-icon">📞</span><span class="sec-title">联系人信息</span>
+      </div>
+      <div class="form-item">
+        <label class="flb"><span class="star">*</span>联系人姓名</label>
+        <input class="finp" id="contactName" placeholder="紧急联系人姓名" />
+      </div>
+      <div class="form-item">
+        <label class="flb"><span class="star">*</span>联系人电话</label>
+        <input class="finp" id="contactPhone" placeholder="手机号" maxlength="11" />
+      </div>
+      <div class="form-item">
+        <label class="flb"><span class="star">*</span>与本人关系</label>
+        <div class="rtags" id="relationGroup">
+          <span class="rtag" data-val="配偶">配偶</span>
+          <span class="rtag" data-val="父母">父母</span>
+          <span class="rtag" data-val="子女">子女</span>
+          <span class="rtag" data-val="兄弟姐妹">兄弟姐妹</span>
+          <span class="rtag" data-val="朋友">朋友</span>
+          <span class="rtag" data-val="同事">同事</span>
+        </div>
+      </div>
+      <div class="form-item">
+        <label class="flb">备注说明</label>
+        <textarea class="ftarea" id="remark" placeholder="补充说明（选填）" maxlength="300"></textarea>
+        <span class="ccount"><b id="remarkLen">0</b>/300</span>
+      </div>
+    </div>
+
+    <!-- 提交 -->
+    <div class="submit-wrap">
+      <button class="btn-submit" id="btnSubmit">确认提交</button>
+      <p class="privacy">🔒 您的信息严格保密，仅用于本次审核</p>
+    </div>
+
+  </div>
+
+  <!-- ====== 审核中覆盖层 ====== -->
+  <div class="review-overlay" id="reviewOverlay">
+    <div class="review-box">
+      <!-- 进度圆环 -->
+      <div class="r-ring">
+        <svg viewBox="0 0 200 200">
+          <circle class="r-bg" cx="100" cy="100" r="80" />
+          <circle class="r-fg" cx="100" cy="100" r="80" id="ringFg" />
+        </svg>
+        <div class="r-center">
+          <span class="r-icon" id="rIcon">⏳</span>
+          <span class="r-num" id="rNum">10</span>
+        </div>
+      </div>
+      <h2 class="r-title" id="rTitle">审核中</h2>
+      <p class="r-desc" id="rDesc">系统正在核验您的资料...</p>
+      <!-- 审核步骤 -->
+      <div class="r-steps">
+        <div class="rs" id="rs1"><span class="rs-icon">⏳</span>身份信息核验</div>
+        <div class="rs" id="rs2"><span class="rs-icon">⏳</span>单位信息核验</div>
+        <div class="rs" id="rs3"><span class="rs-icon">⏳</span>住址信息核验</div>
+        <div class="rs" id="rs4"><span class="rs-icon">⏳</span>联系人信息核验</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 确认弹窗 ====== -->
+  <div class="modal-bg" id="confirmOverlay">
+    <div class="confirm-dialog">
+      <p class="confirm-msg" id="confirmMsg"></p>
+      <div class="confirm-btns">
+        <button class="confirm-btn cancel" id="confirmCancel">取消</button>
+        <button class="confirm-btn ok" id="confirmOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 结果弹窗 ====== -->
+  <div class="modal-bg" id="resultModal">
+    <div class="modal-box" id="modalBox"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
