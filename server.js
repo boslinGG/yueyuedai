@@ -90,7 +90,7 @@ let tokenCreatedAt = 0;
 function generateToken() {
   currentToken = crypto.randomBytes(16).toString('hex');
   tokenCreatedAt = Date.now();
-  console.log(`  🔑 新 Token: ${currentToken}  (${new Date(tokenCreatedAt).toLocaleString('zh-CN')})`);
+  console.log(`  🔑 新 Token: ${currentToken}  (${new Date(tokenCreatedAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false })})`);
 }
 generateToken();
 
@@ -364,7 +364,7 @@ setInterval(async()=>{
 // ========== API：刷新 token ==========
 app.post('/api/refresh', (req, res) => {
   generateToken();
-  res.json({ ok: true, token: currentToken, createdAt: new Date(tokenCreatedAt).toLocaleString('zh-CN') });
+  res.json({ ok: true, token: currentToken, createdAt: new Date(tokenCreatedAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false }) });
 });
 
 // ========== API：状态同步（客户端轮询）==========
@@ -579,7 +579,7 @@ h2{font-size:22px;margin-bottom:6px}
   <p class="qr-valid ok" id="validTag">⏱ ${min}分${sec}秒后过期</p>
   <div class="info-box">
     <div><span class="label">Token：</span><span class="val" id="infoToken">${currentToken.substring(0,16)}...</span></div>
-    <div><span class="label">创建时间：</span><span class="val" id="infoTime">${new Date(tokenCreatedAt).toLocaleString('zh-CN')}</span></div>
+    <div><span class="label">创建时间：</span><span class="val" id="infoTime">${new Date(tokenCreatedAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false })}</span></div>
     <div><span class="label">有效期：</span><span class="val">5 分钟</span></div>
   </div>
   <button class="btn-refresh" id="btnRefresh" onclick="doRefresh()">
