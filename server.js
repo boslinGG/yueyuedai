@@ -655,8 +655,7 @@ async function recognizeIdCardTencent(buffer, side) {
   const cardSide = side === 'front' ? 'FRONT' : 'BACK';
   return tencentRequest('IDCardOCR', {
     ImageBase64: base64,
-    CardSide: cardSide,
-    Config: { CropIdCard: false, CropPortrait: false }
+    CardSide: cardSide
   });
 }
 
