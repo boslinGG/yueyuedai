@@ -2,119 +2,132 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>月月贷 - 我的额度</title>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
     body{
       font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;
       -webkit-tap-highlight-color:transparent;
       -webkit-text-size-adjust:100%;
       background:#F2F3F7;
-      min-height:100vh;
       color:#333;
+      display:flex;flex-direction:column;
+      min-height:100vh;
+      min-height:100dvh;
+      padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
     }
 
     /* ===== 蓝色头部 ===== */
     .head{
       background:linear-gradient(180deg,#2563EB,#1D4ED8);
-      padding:30px 24px 50px;
+      padding:24px 16px 48px;
       text-align:center;
       color:#fff;
+      flex-shrink:0;
     }
-    .head .greeting{font-size:20px;font-weight:700;margin-bottom:4px}
-    .head .phone-display{font-size:13px;opacity:.7;margin-bottom:20px}
+    .head .greeting{font-size:18px;font-weight:700;margin-bottom:4px}
+    .head .phone-display{font-size:13px;opacity:.75;margin-top:4px}
+
+    /* ===== 内容主区 ===== */
+    .main{
+      flex:1;
+      padding:0 16px 16px;
+      margin-top:-32px;
+      position:relative;z-index:2;
+      width:100%;
+      max-width:480px;
+      margin-left:auto;
+      margin-right:auto;
+    }
 
     /* ===== 额度卡片 ===== */
     .amount-card{
-      background:#fff;border-radius:18px;
-      padding:32px 28px 26px;text-align:center;
-      box-shadow:0 8px 32px rgba(0,0,0,.12);
-      margin:-30px 20px 20px;
-      position:relative;z-index:2;
+      background:#fff;border-radius:16px;
+      padding:24px 18px 22px;text-align:center;
+      box-shadow:0 6px 24px rgba(0,0,0,.1);
+      margin-bottom:14px;
     }
     .amount-label{
-      font-size:15px;color:#666;font-weight:600;
-      margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px
+      font-size:14px;color:#888;font-weight:600;
+      margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:6px
     }
-    .amount-label .dia{font-size:11px;color:#bbb}
+    .amount-label .dia{font-size:10px;color:#ccc}
+    .amount-wrap{
+      display:inline-flex;align-items:baseline;justify-content:center;
+      margin-bottom:10px;max-width:100%;flex-wrap:wrap
+    }
     .amount-num{
-      font-size:52px;font-weight:800;color:#1a1a1a;
-      letter-spacing:1px;line-height:1.25;margin-bottom:10px;
-      font-variant-numeric:tabular-nums
+      font-size:clamp(36px,11vw,52px);font-weight:800;color:#1a1a1a;
+      letter-spacing:1px;line-height:1.1;
+      font-variant-numeric:tabular-nums;
+      word-break:break-all
     }
-    .amount-unit{font-size:20px;font-weight:400;color:#999;margin-left:2px}
+    .amount-unit{font-size:16px;font-weight:400;color:#999;margin-left:4px}
 
     .amount-status{
-      display:inline-block;padding:3px 12px;border-radius:12px;
-      font-size:12px;font-weight:600;margin-bottom:20px;
+      display:inline-flex;align-items:center;gap:4px;
+      padding:4px 12px;border-radius:12px;
+      font-size:12px;font-weight:600;margin-bottom:18px;
     }
     .amount-status.approved{background:#D1FAE5;color:#059669}
-    .amount-status.pending{background:#FEF3C7;color:#D97706}
+    .amount-status.pending{background:#FFF5E6;color:#F97316}
 
     .amount-btn{
-      width:100%;height:52px;border-radius:27px;
+      width:100%;height:50px;border-radius:25px;
       background:linear-gradient(135deg,#2563EB,#1D4ED8);
-      color:#fff;font-size:18px;font-weight:700;cursor:pointer;border:none;
-      box-shadow:0 4px 16px rgba(37,99,235,.35);
+      color:#fff;font-size:17px;font-weight:700;cursor:pointer;border:none;
+      box-shadow:0 4px 14px rgba(37,99,235,.32);
       transition:all .2s
     }
     .amount-btn:active{opacity:.88;transform:scale(.97)}
 
     .rate-info{
-      margin-top:14px;font-size:13px;color:#999
+      margin-top:12px;font-size:12px;color:#999
     }
     .rate-info b{color:#FF5722;font-weight:700}
     .rate-tag{
       display:inline-block;background:linear-gradient(135deg,#FF5722,#FF7043);
-      color:#fff;font-size:11px;padding:1px 8px;border-radius:10px;margin-left:4px;
+      color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;
       vertical-align:middle;font-weight:600
     }
 
     /* ===== 用户信息卡片 ===== */
     .info-card{
       background:#fff;border-radius:14px;
-      margin:0 20px 16px;padding:20px;
-      box-shadow:0 2px 12px rgba(0,0,0,.04);
+      margin-bottom:14px;padding:18px;
+      box-shadow:0 2px 10px rgba(0,0,0,.04);
     }
-    .info-card .info-title{font-size:15px;font-weight:700;margin-bottom:14px;color:#333}
-    .info-row{display:flex;justify-content:space-between;padding:8px 0;font-size:14px}
-    .info-row .k{color:#999}
+    .info-card .info-title{font-size:15px;font-weight:700;margin-bottom:12px;color:#333}
+    .info-row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px}
+    .info-row .k{color:#999;flex-shrink:0}
     .info-row .v{color:#333;font-weight:500;max-width:60%;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .info-divider{height:1px;background:#f0f0f0;margin:4px 0}
 
     /* ===== 提示区域 ===== */
     .tips{
-      margin:0 20px 30px;
+      margin-bottom:14px;
       background:linear-gradient(135deg,#EFF6FF,#DBEAFE);
-      border-radius:12px;padding:16px;font-size:13px;color:#1E40AF;
-      display:flex;align-items:flex-start;gap:8px;line-height:1.6;
+      border-radius:12px;padding:14px;font-size:13px;color:#1E40AF;
+      display:flex;align-items:flex-start;gap:8px;line-height:1.5;
     }
-    .tips-icon{font-size:18px;flex-shrink:0}
+    .tips-icon{font-size:16px;flex-shrink:0;margin-top:1px}
 
     /* ===== 底部 ===== */
     .footer{
-      text-align:center;padding:10px 0 30px;
-      font-size:12px;color:#bbb;
+      text-align:center;padding:10px 0 calc(24px + env(safe-area-inset-bottom));
+      font-size:12px;color:#bbb;flex-shrink:0
     }
 
     /* Toast */
     .toast{
-      position:fixed;top:60px;left:50%;transform:translateX(-50%);
+      position:fixed;top:max(60px,env(safe-area-inset-top) + 10px);left:50%;transform:translateX(-50%);
       background:rgba(0,0,0,.78);color:#fff;padding:10px 22px;
       border-radius:20px;font-size:14px;z-index:999;pointer-events:none;
-      opacity:0;transition:opacity .3s
+      opacity:0;transition:opacity .3s;white-space:nowrap;max-width:80vw
     }
     .toast.show{opacity:1}
-
-    /* Loading */
-    .spinner{
-      display:inline-block;width:20px;height:20px;
-      border:2px solid rgba(255,255,255,.3);
-      border-top-color:#fff;border-radius:50%;
-      animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;
-    }
-    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
@@ -128,21 +141,24 @@
     <div class="phone-display" id="phoneShow"></div>
   </div>
 
-  <!-- 额度卡片 -->
-  <div class="amount-card" id="amountCard">
-    <!-- 由 JS 动态渲染 -->
-  </div>
+  <!-- 主内容 -->
+  <div class="main">
+    <!-- 额度卡片 -->
+    <div class="amount-card" id="amountCard">
+      <!-- 由 JS 动态渲染 -->
+    </div>
 
-  <!-- 用户信息 -->
-  <div class="info-card" id="infoCard" style="display:none">
-    <div class="info-title">📋 我的资料</div>
-    <div id="infoContent"></div>
-  </div>
+    <!-- 用户信息 -->
+    <div class="info-card" id="infoCard" style="display:none">
+      <div class="info-title">📋 我的资料</div>
+      <div id="infoContent"></div>
+    </div>
 
-  <!-- 提示 -->
-  <div class="tips" id="tipsBox">
-    <span class="tips-icon">💡</span>
-    <span id="tipsText">填写完整资料可获得更高额度评估。</span>
+    <!-- 提示 -->
+    <div class="tips" id="tipsBox">
+      <span class="tips-icon">💡</span>
+      <span id="tipsText">填写完整资料可获得更高额度评估。</span>
+    </div>
   </div>
 
   <div class="footer">月月贷 · 让借贷更简单</div>
