@@ -249,7 +249,7 @@ function setupIdUpload(boxId, inputId, previewId, placeholderId) {
 
 function tryAutoScan() {
   if (isScanning) return;
-  if (!frontFile || !backFile) return;
+  if (!frontFile) return;  // 只需正面照即可开始识别
 
   isScanning = true;
   const status = $('scanStatus');
@@ -263,13 +263,23 @@ async function doOcr() {
   const status = $('scanStatus');
   try {
     const formData = new FormData();
-    formData.append('front', frontFile);
-    formData.append('back', backFile);
+    if (frontFile) formData.append('front', frontFile);
+    if (backFile)  formData.append('back', backFile);
 
     status.textContent = '⏳ 正在识别身份证信息...';
     status.className = 'scan-status';
 
-    const resp = await fetch('/api/ocr-idcard', { method: 'POST', body: formData });
+    // 8秒超时，确保5秒内完成识别
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    const resp = await fetch('/api/ocr-idcard', {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
     const data = await resp.json();
 
     if (data.ok) {
@@ -280,88 +290,25 @@ async function doOcr() {
       return;
     }
 
-    // 服务端未配置OCR，降级到客户端本地识别
+    // 服务端未配置百度OCR
     if (data.code === 'NO_CONFIG') {
-      status.textContent = '⏳ 正在启动本地识别...';
-      await doClientSideOcr();
+      status.textContent = '⚠ 管理员未配置OCR服务，请手动填写（管理员可设置百度OCR环境变量）';
+      status.className = 'scan-status err';
+      isScanning = false;
       return;
     }
 
     throw new Error(data.msg || '识别失败');
   } catch (e) {
     console.error('OCR error:', e);
-    // 网络错误也尝试客户端降级
-    if (!e.message.includes('本地')) {
-      status.textContent = '⏳ 正在启动本地识别...';
-      await doClientSideOcr();
-      return;
+    if (e.name === 'AbortError') {
+      status.textContent = '⚠ 识别超时（8秒），请手动填写身份信息';
+    } else {
+      status.textContent = '⚠ ' + (e.message || '识别失败，请手动填写身份信息');
     }
-    status.textContent = '⚠ ' + e.message;
     status.className = 'scan-status err';
     isScanning = false;
   }
-}
-
-/* ============ 客户端本地 OCR（Tesseract.js 降级方案）============ */
-async function doClientSideOcr() {
-  const status = $('scanStatus');
-  try {
-    status.textContent = '⏳ 正在加载本地识别引擎...';
-    await loadTesseract();
-
-    status.textContent = '⏳ 正在识别正面（人像面）...';
-    const frontResult = await Tesseract.recognize(frontFile, 'chi_sim');
-    const frontText = frontResult.data.text;
-    console.log('[本地OCR-正面]', frontText);
-
-    status.textContent = '⏳ 正在识别背面（国徽面）...';
-    const backResult = await Tesseract.recognize(backFile, 'chi_sim');
-    const backText = backResult.data.text;
-    console.log('[本地OCR-背面]', backText);
-
-    parseIdCardText(frontText, backText);
-    status.textContent = '✅ 本地识别完成，请核对并修改信息';
-    status.className = 'scan-status ok';
-  } catch (e) {
-    console.error('客户端OCR失败:', e);
-    status.textContent = '⚠ 本地识别失败，请手动填写身份信息';
-    status.className = 'scan-status err';
-  }
-  isScanning = false;
-}
-
-function parseIdCardText(frontText, backText) {
-  // 姓名：匹配"姓名"后的2-4个汉字
-  const nameM = frontText.match(/姓名[：:\s]*([\u4e00-\u9fa5]{2,4})/);
-  if (nameM) $('name').value = nameM[1];
-
-  // 身份证号：18位
-  const idM = frontText.match(/(\d{17}[\dXx])/);
-  if (idM) {
-    $('idCard').value = idM[1];
-    $('idCard').dispatchEvent(new Event('blur'));
-  }
-
-  // 性别
-  const genderM = frontText.match(/性别[：:\s]*(男|女)/);
-  if (genderM) {
-    const g = genderM[1];
-    $('genderGroup').querySelectorAll('.rtag').forEach(t => t.classList.toggle('sel', t.dataset.val === g));
-  }
-
-  // 民族
-  const nationM = frontText.match(/民族[：:\s]*([\u4e00-\u9fa5]{1,5})/);
-  if (nationM) $('nation').value = nationM[1];
-
-  // 出生日期：1990年01月01日 或 1990 01 01
-  const bdM = frontText.match(/(\d{4})\s*[年\s]\s*(\d{1,2})\s*[月\s]\s*(\d{1,2})/);
-  if (bdM) {
-    $('birthday').value = `${bdM[1]}-${bdM[2].padStart(2,'0')}-${bdM[3].padStart(2,'0')}`;
-  }
-
-  // 有效期（背面）
-  const viM = backText.match(/(\d{4}[.\s-]+\d{4}[.\s-]+\d{4}|长期)/);
-  if (viM) $('idValid').value = viM[0].replace(/\s+/g, '');
 }
 
 function fillFormFromOcr(data) {

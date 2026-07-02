@@ -583,7 +583,8 @@ async function getBaiduAccessToken() {
   if (baiduAccessToken && Date.now() < baiduTokenExpiry) {
     return baiduAccessToken;
   }
-  const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${encodeURIComponent(BAIDU_OCR_API_KEY)}&client_secret=${encodeURIComponent(BAIDU_OCR_SECRET_KEY)}`;
+  const url = 'https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=' +
+    encodeURIComponent(BAIDU_OCR_API_KEY) + '&client_secret=' + encodeURIComponent(BAIDU_OCR_SECRET_KEY);
   const resp = await fetch(url);
   const data = await resp.json();
   if (!data.access_token) throw new Error(data.error_description || '获取百度OCR token失败');
@@ -595,17 +596,16 @@ async function getBaiduAccessToken() {
 async function recognizeIdCard(buffer, side) {
   const token = await getBaiduAccessToken();
   const base64 = buffer.toString('base64');
-  const url = `https://aip.baidubce.com/rest/2.0/ocr/v1/idcard?access_token=${token}`;
+  const url = 'https://aip.baidubce.com/rest/2.0/ocr/v1/idcard?access_token=' + token;
   const body = new URLSearchParams({ image: base64, id_card_side: side, detect_direction: 'true' });
   const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
   return resp.json();
 }
 
 function formatBirthday(birthday) {
-  // 出生: "1990年01月01日" → "1990-01-01"
   const m = birthday.match(/(\d{4})[年\s]+(\d{1,2})[月\s]+(\d{1,2})/);
   if (!m) return '';
-  return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  return m[1] + '-' + m[2].padStart(2,'0') + '-' + m[3].padStart(2,'0');
 }
 
 app.post('/api/ocr-idcard', upload.fields([
@@ -614,11 +614,10 @@ app.post('/api/ocr-idcard', upload.fields([
 ]), async (req, res) => {
   const front = req.files && req.files.front ? req.files.front[0] : null;
   const back = req.files && req.files.back ? req.files.back[0] : null;
-  console.log(`  📷 OCR请求: front=${front ? (front.size/1024).toFixed(0)+'KB' : '无'}, back=${back ? (back.size/1024).toFixed(0)+'KB' : '无'}`);
+  console.log('  📷 OCR请求: front=' + (front ? (front.size/1024).toFixed(0) + 'KB' : '无') + ', back=' + (back ? (back.size/1024).toFixed(0) + 'KB' : '无'));
 
-  // 未配置百度OCR，告知客户端降级到本地OCR
   if (!BAIDU_OCR_API_KEY || !BAIDU_OCR_SECRET_KEY) {
-    return res.json({ ok: false, code: 'NO_CONFIG', msg: '服务端未配置OCR，将使用本地识别' });
+    return res.json({ ok: false, code: 'NO_CONFIG', msg: '服务端未配置OCR' });
   }
 
   try {
