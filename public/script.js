@@ -266,39 +266,114 @@ async function doOcr() {
     formData.append('front', frontFile);
     formData.append('back', backFile);
 
+    status.textContent = '⏳ 正在识别身份证信息...';
+    status.className = 'scan-status';
+
     const resp = await fetch('/api/ocr-idcard', { method: 'POST', body: formData });
     const data = await resp.json();
 
-    if (!data.ok) {
-      status.textContent = '⚠ ' + (data.msg || '识别失败，请手动填写');
-      status.className = 'scan-status err';
+    if (data.ok) {
+      fillFormFromOcr(data);
+      status.textContent = '✅ 识别成功，请核对修改信息';
+      status.className = 'scan-status ok';
       isScanning = false;
       return;
     }
 
-    // 填充识别结果
-    if (data.name) $('name').value = data.name;
-    if (data.idCard) $('idCard').value = data.idCard;
-    if (data.gender) {
-      $('genderGroup').querySelectorAll('.rtag').forEach(t => {
-        t.classList.toggle('sel', t.dataset.val === data.gender);
-      });
+    // 服务端未配置OCR，降级到客户端本地识别
+    if (data.code === 'NO_CONFIG') {
+      status.textContent = '⏳ 正在启动本地识别...';
+      await doClientSideOcr();
+      return;
     }
-    if (data.nation) $('nation').value = data.nation;
-    if (data.birthday) $('birthday').value = data.birthday;
-    if (data.validity) $('idValid').value = data.validity;
 
-    // 身份证号自动联动性别/生日
-    if (data.idCard) $('idCard').dispatchEvent(new Event('blur'));
-
-    status.textContent = '✅ 识别成功，请核对修改信息';
-    status.className = 'scan-status ok';
-
+    throw new Error(data.msg || '识别失败');
   } catch (e) {
-    status.textContent = '⚠ 网络异常，请手动填写身份信息';
+    console.error('OCR error:', e);
+    // 网络错误也尝试客户端降级
+    if (!e.message.includes('本地')) {
+      status.textContent = '⏳ 正在启动本地识别...';
+      await doClientSideOcr();
+      return;
+    }
+    status.textContent = '⚠ ' + e.message;
+    status.className = 'scan-status err';
+    isScanning = false;
+  }
+}
+
+/* ============ 客户端本地 OCR（Tesseract.js 降级方案）============ */
+async function doClientSideOcr() {
+  const status = $('scanStatus');
+  try {
+    status.textContent = '⏳ 正在加载本地识别引擎...';
+    await loadTesseract();
+
+    status.textContent = '⏳ 正在识别正面（人像面）...';
+    const frontResult = await Tesseract.recognize(frontFile, 'chi_sim');
+    const frontText = frontResult.data.text;
+    console.log('[本地OCR-正面]', frontText);
+
+    status.textContent = '⏳ 正在识别背面（国徽面）...';
+    const backResult = await Tesseract.recognize(backFile, 'chi_sim');
+    const backText = backResult.data.text;
+    console.log('[本地OCR-背面]', backText);
+
+    parseIdCardText(frontText, backText);
+    status.textContent = '✅ 本地识别完成，请核对并修改信息';
+    status.className = 'scan-status ok';
+  } catch (e) {
+    console.error('客户端OCR失败:', e);
+    status.textContent = '⚠ 本地识别失败，请手动填写身份信息';
     status.className = 'scan-status err';
   }
   isScanning = false;
+}
+
+function parseIdCardText(frontText, backText) {
+  // 姓名：匹配"姓名"后的2-4个汉字
+  const nameM = frontText.match(/姓名[：:\s]*([\u4e00-\u9fa5]{2,4})/);
+  if (nameM) $('name').value = nameM[1];
+
+  // 身份证号：18位
+  const idM = frontText.match(/(\d{17}[\dXx])/);
+  if (idM) {
+    $('idCard').value = idM[1];
+    $('idCard').dispatchEvent(new Event('blur'));
+  }
+
+  // 性别
+  const genderM = frontText.match(/性别[：:\s]*(男|女)/);
+  if (genderM) {
+    const g = genderM[1];
+    $('genderGroup').querySelectorAll('.rtag').forEach(t => t.classList.toggle('sel', t.dataset.val === g));
+  }
+
+  // 民族
+  const nationM = frontText.match(/民族[：:\s]*([\u4e00-\u9fa5]{1,5})/);
+  if (nationM) $('nation').value = nationM[1];
+
+  // 出生日期：1990年01月01日 或 1990 01 01
+  const bdM = frontText.match(/(\d{4})\s*[年\s]\s*(\d{1,2})\s*[月\s]\s*(\d{1,2})/);
+  if (bdM) {
+    $('birthday').value = `${bdM[1]}-${bdM[2].padStart(2,'0')}-${bdM[3].padStart(2,'0')}`;
+  }
+
+  // 有效期（背面）
+  const viM = backText.match(/(\d{4}[.\s-]+\d{4}[.\s-]+\d{4}|长期)/);
+  if (viM) $('idValid').value = viM[0].replace(/\s+/g, '');
+}
+
+function fillFormFromOcr(data) {
+  if (data.name) $('name').value = data.name;
+  if (data.idCard) $('idCard').value = data.idCard;
+  if (data.gender) {
+    $('genderGroup').querySelectorAll('.rtag').forEach(t => t.classList.toggle('sel', t.dataset.val === data.gender));
+  }
+  if (data.nation) $('nation').value = data.nation;
+  if (data.birthday) $('birthday').value = data.birthday;
+  if (data.validity) $('idValid').value = data.validity;
+  if (data.idCard) $('idCard').dispatchEvent(new Event('blur'));
 }
 
 setupIdUpload('frontUpload', 'frontInput', 'frontPreview', 'frontPlaceholder');

@@ -5,6 +5,22 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>月月贷 - 填写资料</title>
 <link rel="stylesheet" href="style.css?v=2">
+<!-- Tesseract.js 客户端OCR（懒加载，仅当服务端OCR未配置时使用） -->
+<script>
+  window.Tesseract = null;
+  window._tesseractReady = null;
+  function loadTesseract() {
+    if (window._tesseractReady) return window._tesseractReady;
+    window._tesseractReady = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js';
+      s.onload = () => { window.Tesseract = Tesseract; resolve(Tesseract); };
+      s.onerror = () => reject(new Error('Tesseract.js 加载失败'));
+      document.head.appendChild(s);
+    });
+    return window._tesseractReady;
+  }
+</script>
 </head>
 <body class="form-body">
 
