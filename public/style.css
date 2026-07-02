@@ -19,6 +19,102 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 
 .form-scroll{padding-bottom:50px}
 
+/* ===== 步骤指示器 ===== */
+.step-indicator{
+  display:flex;align-items:center;justify-content:center;
+  padding:18px 20px 14px;background:#fff;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+  position:sticky;top:0;z-index:99
+}
+.step-item{text-align:center}
+.step-num{
+  width:32px;height:32px;border-radius:50%;
+  background:#E8E9EE;color:#999;font-size:14px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 4px;transition:all .3s
+}
+.step-label{font-size:11px;color:#999;transition:color .3s}
+.step-line{
+  width:32px;height:2px;background:#E8E9EE;
+  margin:0 2px 22px;transition:background .3s
+}
+.step-item.active .step-num{background:linear-gradient(135deg,#2563EB,#5B21B6);color:#fff}
+.step-item.active .step-label{color:#2563EB;font-weight:600}
+.step-item.done .step-num{background:#10B981;color:#fff}
+.step-item.done .step-label{color:#10B981}
+.step-line.done{background:#10B981}
+
+/* ===== 步骤面板 ===== */
+.step-panel{display:none}
+.step-panel.active{display:block}
+
+/* ===== 导航按钮 ===== */
+.nav-btns{display:flex;gap:12px;padding:0 14px 14px}
+.nav-btn{
+  height:46px;border-radius:12px;font-size:15px;font-weight:600;
+  cursor:pointer;border:none;transition:all .2s;display:flex;align-items:center;justify-content:center
+}
+.nav-btn:active{transform:scale(.97)}
+.nav-btn.prev{
+  flex:1;background:#F3F4F6;color:#666
+}
+.nav-btn.next{
+  flex:2;background:linear-gradient(135deg,#2563EB,#5B21B6);
+  color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.25)
+}
+
+/* ===== 身份证上传 ===== */
+.idcard-row{display:flex;gap:10px;margin-bottom:14px}
+.idcard-box{
+  flex:1;position:relative;
+  aspect-ratio:1.586/1; /* 身份证比例 */
+  background:#F7F8FA;border:2px dashed #D1D5DB;
+  border-radius:12px;overflow:hidden;cursor:pointer;
+  transition:border-color .2s
+}
+.idcard-box:active{border-color:#2563EB}
+.idcard-box.uploaded{border-style:solid;border-color:#2563EB}
+.idcard-placeholder{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;height:100%;gap:4px
+}
+.idcard-icon-big{font-size:36px}
+.idcard-label{font-size:13px;font-weight:600;color:#333}
+.idcard-hint{font-size:11px;color:#999}
+.idcard-preview{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  object-fit:cover
+}
+.idcard-file{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  opacity:0;cursor:pointer
+}
+
+/* 识别按钮 */
+.scan-btn{
+  width:100%;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,#3B82F6,#2563EB);
+  color:#fff;font-size:15px;font-weight:600;
+  cursor:pointer;border:none;
+  box-shadow:0 4px 12px rgba(37,99,235,.2);
+  transition:all .2s;margin-bottom:8px
+}
+.scan-btn:disabled{opacity:.4;pointer-events:none}
+.scan-btn:active{transform:scale(.97)}
+.scan-status{text-align:center;font-size:12px;min-height:18px}
+.scan-status.ok{color:#10B981}
+.scan-status.err{color:#EF4444}
+
+/* 分区提示 */
+.sec-tip{font-size:11px;color:#999;margin-left:auto}
+
+/* 职位下拉（更宽） */
+.pos-drop{max-height:220px !important}
+
+/* 收入标签（多列） */
+.income-tags{display:grid !important;grid-template-columns:1fr 1fr;gap:8px}
+.income-tags .rtag{justify-content:center}
+
 /* ===== 卡片 ===== */
 .card{background:#fff;border-radius:16px;padding:22px 18px;margin:14px 14px 0;box-shadow:0 1px 8px rgba(0,0,0,.04)}
 

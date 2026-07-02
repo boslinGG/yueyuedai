@@ -6,6 +6,8 @@ const express = require('express');
 const QRCode = require('qrcode');
 const crypto = require('crypto');
 const path = require('path');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -563,6 +565,34 @@ app.post('/api/submit', (req, res) => {
     passed: passed,
     amount: amount,
     field: passed ? null : '身份信息'
+  });
+});
+
+// ========== API：OCR 身份证识别 ==========
+// 说明：当前为模拟OCR，返回示例数据供测试。生产环境可接入：
+//   - 百度OCR：https://ai.baidu.com/tech/ocr/idcard
+//   - 腾讯云OCR：https://cloud.tencent.com/product/ocr
+//   - 阿里云OCR：https://help.aliyun.com/document_detail/52078.html
+app.post('/api/ocr-idcard', upload.fields([
+  { name: 'front', maxCount: 1 },
+  { name: 'back', maxCount: 1 }
+]), (req, res) => {
+  const front = req.files && req.files.front ? req.files.front[0] : null;
+  const back = req.files && req.files.back ? req.files.back[0] : null;
+
+  console.log(`  📷 OCR请求: front=${front ? (front.size / 1024).toFixed(0) + 'KB' : '无'}, back=${back ? (back.size / 1024).toFixed(0) + 'KB' : '无'}`);
+
+  // 生产环境：此处调用真实OCR API解析 front.buffer / back.buffer 获取身份证信息
+  // 当前返回模拟数据供前端测试流程
+  res.json({
+    ok: true,
+    name: '张伟',
+    gender: '男',
+    nation: '汉族',
+    birthday: '1990-05-20',
+    idCard: '110101199005201234',
+    validity: '长期',
+    _note: '当前为模拟OCR结果，生产环境请接入真实OCR API'
   });
 });
 
