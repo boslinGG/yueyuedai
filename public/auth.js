@@ -110,11 +110,11 @@ async function doLogin() {
     const data = await resp.json();
 
     if (data.ok) {
-      // 登录/注册成功，跳转到表单页
-      const formUrl = `/form.html?token=${encodeURIComponent(token)}&session=${encodeURIComponent(data.session)}`;
+      // 登录/注册成功，跳转到首页
+      const homeUrl = `/home.html?token=${encodeURIComponent(token)}&session=${encodeURIComponent(data.session)}`;
       toast('验证成功，正在跳转...');
       setTimeout(() => {
-        location.href = formUrl;
+        location.href = homeUrl;
       }, 500);
     } else {
       toast(data.msg || '验证码错误或已过期');

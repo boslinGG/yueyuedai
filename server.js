@@ -105,6 +105,7 @@ const SESSION_VALID_MS = 30 * 60 * 1000; // 会话30分钟有效
 const verificationCodes = new Map();  // phone -> { code, expiresAt }
 const userSessions = new Map();       // sessionId -> { phone, createdAt }
 const users = new Map();              // phone -> { phone, createdAt }  简易用户库
+const userSubmissions = new Map();    // phone -> { phone, data, approved, amount, createdAt }  用户提交记录
 
 // 生成6位随机验证码
 function genCode() {
@@ -162,6 +163,24 @@ app.get('/form.html', (req, res, next) => {
   // 再校验登录会话
   if (!session || !userSessions.has(session)) {
     // 未登录 → 重定向回登录页
+    return res.redirect(`/auth.html?token=${encodeURIComponent(token)}`);
+  }
+  next();
+});
+
+// ========== /home.html Token + Session 校验 ==========
+app.get('/home.html', (req, res, next) => {
+  const token = req.query.token || '';
+  const session = req.query.session || '';
+
+  if (!token || token !== currentToken) {
+    return res.send(expiredPage(currentToken));
+  }
+  const elapsed = Date.now() - tokenCreatedAt;
+  if (elapsed > QR_VALID_MS) {
+    return res.send(expiredPage(currentToken));
+  }
+  if (!session || !userSessions.has(session)) {
     return res.redirect(`/auth.html?token=${encodeURIComponent(token)}`);
   }
   next();
@@ -480,6 +499,71 @@ app.post('/api/verify-code', (req, res) => {
   userSessions.set(sessionId, { phone, createdAt: Date.now() });
 
   res.json({ ok: true, session: sessionId, phone: phone });
+});
+
+// ========== API：获取用户额度状态 ==========
+app.get('/api/user-limit', (req, res) => {
+  const session = req.query.session || '';
+  if (!session || !userSessions.has(session)) {
+    return res.json({ ok: false, msg: '会话已过期，请重新扫码' });
+  }
+
+  const sess = userSessions.get(session);
+  const phone = sess.phone;
+  const submission = userSubmissions.get(phone);
+  const hasSubmitted = !!submission;
+
+  res.json({
+    ok: true,
+    phone: phone,
+    hasSubmitted: hasSubmitted,
+    amount: hasSubmitted ? submission.amount : 1000000,
+    approved: hasSubmitted ? submission.approved : false,
+    info: hasSubmitted ? {
+      name: submission.data.name,
+      idCard: submission.data.idCard,
+      company: submission.data.company,
+      createdAt: submission.createdAt
+    } : null
+  });
+});
+
+// ========== API：提交表单审核 ==========
+app.post('/api/submit', (req, res) => {
+  const { session, data } = req.body || {};
+  if (!session || !userSessions.has(session)) {
+    return res.json({ ok: false, msg: '会话已过期，请重新扫码' });
+  }
+
+  const sess = userSessions.get(session);
+  const phone = sess.phone;
+
+  if (!data || !data.name || !data.idCard) {
+    return res.json({ ok: false, msg: '提交数据不完整' });
+  }
+
+  // 模拟审核：88% 通过率
+  const passed = Math.random() > 0.12;
+  // 随机额度 10万~100万
+  const amount = Math.floor(Math.random() * 900001) + 100000;
+
+  // 存储提交记录
+  userSubmissions.set(phone, {
+    phone: phone,
+    data: data,
+    approved: passed,
+    amount: amount,
+    createdAt: Date.now()
+  });
+
+  console.log(`  📋 ${phone} 提交资料 → ${passed ? '✅ 通过' : '❌ 未通过'} → 额度 ¥${amount.toLocaleString()}`);
+
+  res.json({
+    ok: true,
+    passed: passed,
+    amount: amount,
+    field: passed ? null : '身份信息'
+  });
 });
 
 // ========== 后台管理页 ==========

@@ -247,7 +247,7 @@ function submit() {
   });
 }
 
-// ============ 审核流程（10秒） ============
+// ============ 审核流程（10秒后提交后端）============
 function startReview(data) {
   const overlay = $('reviewOverlay');
   if (!overlay) { toast('页面异常，请刷新后重试'); return; }
@@ -256,7 +256,7 @@ function startReview(data) {
   // 重置
   const ring = $('ringFg');
   if (!ring) return;
-  const CIRCLE = 2 * Math.PI * 80; // ~502.65
+  const CIRCLE = 2 * Math.PI * 80;
   ring.style.stroke = '#22D3EE';
   ring.style.strokeDashoffset = '0';
   safeText('rNum', '10');
@@ -267,7 +267,6 @@ function startReview(data) {
     safeStep(id, '⏳');
   });
 
-  // 滚动到顶部（覆盖层）
   overlay.scrollTop = 0;
 
   let sec = 0;
@@ -290,37 +289,69 @@ function startReview(data) {
       ring.style.strokeDashoffset = CIRCLE;
       safeText('rNum', '0');
 
-      const passed = Math.random() > 0.12;
-
-      if (passed) {
-        ring.style.stroke = '#10B981';
-        safeText('rIcon', '✅');
-        safeText('rTitle', '审核通过');
-        safeText('rDesc', '您的资料已审核通过');
-        ['rs1','rs2','rs3','rs4'].forEach(id => safeStep(id, '✅', 'done'));
-      } else {
-        ring.style.stroke = '#EF4444';
-        safeText('rIcon', '❌');
-        safeText('rTitle', '审核未通过');
-        safeText('rDesc', '身份信息核验异常');
-        safeStep('rs1', '❌', 'fail');
-      }
-
-      // 0.6秒后弹窗
-      setTimeout(() => showResult(data, passed), 600);
+      // 提交到后端进行审核
+      submitToServer(data);
     }
   }, 1000);
 }
 
+// ============ 提交表单到后端 ============
+async function submitToServer(data) {
+  const ring = $('ringFg');
+
+  // 从 URL 获取 session
+  const session = new URLSearchParams(location.search).get('session') || '';
+  const token = new URLSearchParams(location.search).get('token') || '';
+
+  if (!session) {
+    toast('会话已过期，请重新扫码');
+    return;
+  }
+
+  try {
+    const resp = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session, data })
+    });
+    const result = await resp.json();
+
+    if (!result.ok) {
+      toast(result.msg || '提交失败，请重试');
+      $('reviewOverlay').classList.remove('on');
+      return;
+    }
+
+    if (result.passed) {
+      ring.style.stroke = '#10B981';
+      safeText('rIcon', '✅');
+      safeText('rTitle', '审核通过');
+      safeText('rDesc', '您的资料已审核通过');
+      ['rs1','rs2','rs3','rs4'].forEach(id => safeStep(id, '✅', 'done'));
+    } else {
+      ring.style.stroke = '#EF4444';
+      safeText('rIcon', '❌');
+      safeText('rTitle', '审核未通过');
+      safeText('rDesc', '身份信息核验异常');
+      safeStep('rs1', '❌', 'fail');
+    }
+
+    setTimeout(() => showResult(data, result.passed, result.amount), 600);
+  } catch (e) {
+    toast('网络异常，审核失败');
+    $('reviewOverlay').classList.remove('on');
+  }
+}
+
 // ============ 结果弹窗 ============
-function showResult(data, passed) {
+function showResult(data, passed, amount) {
   const bg = $('resultModal');
   const box = $('modalBox');
   if (!bg || !box) { toast('页面异常，请刷新后重试'); return; }
   const now = new Date().toLocaleString('zh-CN', { hour12: false });
 
   if (passed) {
-    const amt = 1000000;
+    const amt = amount || 1000000;
     box.innerHTML = `
       <div class="loan-page">
         <!-- 蓝色背景区 -->
@@ -332,7 +363,7 @@ function showResult(data, passed) {
             <!-- 大金额数字 -->
             <div class="loan-amount">${amt.toLocaleString()}</div>
             <!-- 蓝色按钮 -->
-            <button class="loan-btn" onclick="reset()">我要借钱</button>
+            <button class="loan-btn" onclick="goHome()">返回首页</button>
             <!-- 利率说明 -->
             <div class="loan-rate">年化利率(单利) <b>7.2%</b>~<b>18%</b><span class="rate-tag">限时优惠</span></div>
           </div>
@@ -376,6 +407,13 @@ function esc(s) {
 function maskId(id) {
   return id ? id.substring(0, 3) + '****' + id.slice(-4) : '';
 }
+
+// 返回首页
+window.goHome = function() {
+  const token = new URLSearchParams(location.search).get('token') || '';
+  const session = new URLSearchParams(location.search).get('session') || '';
+  location.href = `/home.html?token=${encodeURIComponent(token)}&session=${encodeURIComponent(session)}`;
+};
 
 // 重置
 window.reset = function() {
