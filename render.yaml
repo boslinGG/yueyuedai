@@ -6,8 +6,3 @@ services:
     startCommand: node server.js
     plan: free
     healthCheckPath: /api/status
-    envVars:
-      - key: IHUYI_API_ID
-        value: C92846609
-      - key: IHUYI_API_KEY
-        value: 91dedf8b05aec891f216cd27b1fa9baa
