@@ -84,7 +84,6 @@ function renderPage(data) {
         <span class="amount-num">1,000,000</span>
         <span class="amount-unit">元</span>
       </div>
-      <div class="amount-status rejected">上次未通过审核</div>
       <button class="amount-btn" onclick="goTest()">重新测试额度</button>
       <div class="rate-info">年化利率(单利) <span class="val">7.2%</span>~<span class="val">18%</span><span class="rate-tag">限时优惠</span></div>
     `;
