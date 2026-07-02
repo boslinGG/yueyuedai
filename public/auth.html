@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>月月贷 - 登录</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;
+      -webkit-tap-highlight-color:transparent;
+      -webkit-text-size-adjust:100%;
+      background:linear-gradient(180deg,#1D4ED8,#5B21B6);
+      min-height:100vh;display:flex;align-items:center;justify-content:center;
+      color:#fff;
+    }
+    .page{width:100%;max-width:400px;padding:24px;text-align:center}
+    
+    /* Logo */
+    .logo{font-size:56px;margin-bottom:8px}
+    .brand{font-size:30px;font-weight:800;margin-bottom:4px;letter-spacing:2px}
+    .slogan{font-size:14px;color:rgba(255,255,255,.55);margin-bottom:36px}
+
+    /* 卡片 */
+    .card{
+      background:rgba(255,255,255,.06);backdrop-filter:blur(10px);
+      border-radius:20px;padding:32px 24px 28px;text-align:left;
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .card-title{font-size:18px;font-weight:700;margin-bottom:6px;text-align:center}
+    .card-sub{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:24px;text-align:center}
+
+    /* 输入区 */
+    .input-group{margin-bottom:16px}
+    .input-label{font-size:13px;font-weight:600;color:rgba(255,255,255,.7);display:block;margin-bottom:6px}
+    .input-wrapper{position:relative}
+    .input-field{
+      width:100%;height:50px;background:rgba(255,255,255,.08);
+      border:2px solid rgba(255,255,255,.12);border-radius:12px;
+      padding:0 16px;font-size:16px;color:#fff;
+      transition:border-color .2s
+    }
+    .input-field:focus{border-color:#60A5FA;background:rgba(255,255,255,.12)}
+    .input-field::placeholder{color:rgba(255,255,255,.25)}
+
+    /* 验证码行 */
+    .code-row{display:flex;gap:10px}
+    .code-row .input-wrapper{flex:1}
+    .btn-code{
+      height:50px;min-width:120px;border-radius:12px;
+      background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.15);
+      color:#fff;font-size:14px;font-weight:600;cursor:pointer;
+      transition:all .18s;white-space:nowrap;flex-shrink:0;
+    }
+    .btn-code:active{transform:scale(.96)}
+    .btn-code:disabled{opacity:.4;pointer-events:none}
+    .btn-code.counting{background:#34D399;border-color:#34D399;color:#fff}
+
+    /* 提交按钮 */
+    .btn-submit{
+      width:100%;height:52px;margin-top:8px;
+      background:linear-gradient(135deg,#34D399,#10B981);
+      border:none;border-radius:14px;
+      color:#fff;font-size:17px;font-weight:700;cursor:pointer;
+      box-shadow:0 6px 24px rgba(16,185,129,.35);
+      transition:all .2s
+    }
+    .btn-submit:active{opacity:.85;transform:scale(.97)}
+    .btn-submit:disabled{opacity:.5;pointer-events:none}
+
+    /* 提示 */
+    .tip{margin-top:16px;font-size:12px;color:rgba(255,255,255,.35);text-align:center;line-height:1.6}
+    .tip-row{display:flex;align-items:center;justify-content:center;gap:4px}
+
+    /* Toast */
+    .toast{
+      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+      background:rgba(0,0,0,.82);color:#fff;font-size:15px;
+      padding:14px 30px;border-radius:12px;z-index:9999;
+      pointer-events:none;opacity:0;transition:opacity .25s
+    }
+    .toast.show{opacity:1}
+
+    /* 成功状态 */
+    .card.succeed{opacity:.9}
+    .success-icon{font-size:64px;display:block;text-align:center;margin-bottom:12px}
+    .success-text{text-align:center;font-size:18px;font-weight:700}
+    .success-sub{text-align:center;font-size:13px;color:rgba(255,255,255,.45);margin-top:6px}
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="logo">🏦</div>
+  <div class="brand">月月贷</div>
+  <div class="slogan">安全 · 便捷 · 快速到账</div>
+
+  <div class="card" id="loginCard">
+    <div class="card-title">📱 手机号登录 / 注册</div>
+    <div class="card-sub">首次使用将自动注册账号</div>
+
+    <div class="input-group">
+      <label class="input-label">手机号码</label>
+      <div class="input-wrapper">
+        <input class="input-field" id="phone" type="tel" placeholder="请输入手机号" maxlength="11" autocomplete="tel" />
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">短信验证码</label>
+      <div class="code-row">
+        <div class="input-wrapper">
+          <input class="input-field" id="code" type="text" placeholder="6位验证码" maxlength="6" autocomplete="one-time-code" />
+        </div>
+        <button class="btn-code" id="btnCode" onclick="sendCode()">获取验证码</button>
+      </div>
+    </div>
+
+    <button class="btn-submit" id="btnSubmit" onclick="doLogin()">登录 / 注册</button>
+
+    <div class="tip">
+      <div class="tip-row">🔒 您的信息严格保密</div>
+      <div>未注册手机号将自动创建账号</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="auth.js"></script>
+</body>
+</html>

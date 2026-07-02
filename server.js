@@ -23,6 +23,26 @@ function generateToken() {
 }
 generateToken();
 
+// ========== 验证码 & 会话 & 用户（内存存储）==========
+const CODE_VALID_MS = 5 * 60 * 1000;   // 验证码5分钟内有效
+const SESSION_VALID_MS = 30 * 60 * 1000; // 会话30分钟有效
+
+const verificationCodes = new Map();  // phone -> { code, expiresAt }
+const userSessions = new Map();       // sessionId -> { phone, createdAt }
+const users = new Map();              // phone -> { phone, createdAt }  简易用户库
+
+// 生成6位随机验证码
+function genCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+// 清除过期数据
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of verificationCodes) { if (now > v.expiresAt) verificationCodes.delete(k); }
+  for (const [k, v] of userSessions) { if (now > v.createdAt + SESSION_VALID_MS) userSessions.delete(k); }
+}, 60 * 1000);
+
 // ========== Express 配置 ==========
 app.set('trust proxy', true);
 app.use(express.json());
@@ -34,11 +54,12 @@ function getHost(req) {
 }
 
 function getFormUrl(req) {
-  return `https://${getHost(req)}/form.html?token=${currentToken}`;
+  // 扫码后先跳转登录注册页（auth），验证通过后再到表单页
+  return `https://${getHost(req)}/auth.html?token=${currentToken}`;
 }
 
-// ========== /form.html Token 校验 ==========
-app.get('/form.html', (req, res, next) => {
+// ========== /auth.html Token 校验（扫码后先进登录页）==========
+app.get('/auth.html', (req, res, next) => {
   const token = req.query.token || '';
   if (!token || token !== currentToken) {
     return res.send(expiredPage(currentToken));
@@ -50,6 +71,27 @@ app.get('/form.html', (req, res, next) => {
   next();
 });
 
+// ========== /form.html Token + Session 校验 ==========
+app.get('/form.html', (req, res, next) => {
+  const token = req.query.token || '';
+  const session = req.query.session || '';
+
+  // 先校验 token
+  if (!token || token !== currentToken) {
+    return res.send(expiredPage(currentToken));
+  }
+  const elapsed = Date.now() - tokenCreatedAt;
+  if (elapsed > QR_VALID_MS) {
+    return res.send(expiredPage(currentToken));
+  }
+  // 再校验登录会话
+  if (!session || !userSessions.has(session)) {
+    // 未登录 → 重定向回登录页
+    return res.redirect(`/auth.html?token=${encodeURIComponent(token)}`);
+  }
+  next();
+});
+
 // ========== 静态文件（放在 token 校验之后）==========
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -57,7 +99,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', async (req, res) => {
   const ua = req.headers['user-agent'] || '';
   if (/Mobile|Android|iPhone|iPad|iPod/i.test(ua)) {
-    return res.redirect(`/form.html?token=${currentToken}`);
+    return res.redirect(`/auth.html?token=${currentToken}`);
   }
   const formUrl = getFormUrl(req);
   try {
@@ -199,6 +241,78 @@ app.get('/api/status', (req, res) => {
     token: currentToken,
     serverNow: Date.now()
   });
+});
+
+// ========== API：发送短信验证码 ==========
+app.post('/api/send-code', (req, res) => {
+  const { phone } = req.body || {};
+  if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+    return res.json({ ok: false, msg: '请输入正确的手机号' });
+  }
+
+  // 检查是否已发送且在有效期内（防止频繁发送）
+  const existing = verificationCodes.get(phone);
+  if (existing && Date.now() - (existing.expiresAt - CODE_VALID_MS) < 60000) {
+    return res.json({ ok: false, msg: '发送过于频繁，请60秒后再试' });
+  }
+
+  const code = genCode();
+  verificationCodes.set(phone, {
+    code: code,
+    expiresAt: Date.now() + CODE_VALID_MS
+  });
+
+  // 模拟发送短信：打印到控制台
+  console.log(`\n  📱 ===== 短信验证码 =====`);
+  console.log(`  手机号：${phone}`);
+  console.log(`  验证码：${code}`);
+  console.log(`  有效期：5分钟`);
+  console.log(`  ========================\n`);
+
+  res.json({ ok: true });
+});
+
+// ========== API：验证短信码并登录/注册 ==========
+app.post('/api/verify-code', (req, res) => {
+  const { phone, code, token } = req.body || {};
+
+  // 校验 token
+  if (!token || token !== currentToken) {
+    return res.json({ ok: false, msg: '二维码已过期，请重新扫码' });
+  }
+
+  // 校验手机号
+  if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+    return res.json({ ok: false, msg: '手机号格式不正确' });
+  }
+
+  // 校验验证码
+  const record = verificationCodes.get(phone);
+  if (!record) {
+    return res.json({ ok: false, msg: '请先获取验证码' });
+  }
+  if (Date.now() > record.expiresAt) {
+    verificationCodes.delete(phone);
+    return res.json({ ok: false, msg: '验证码已过期，请重新获取' });
+  }
+  if (record.code !== code) {
+    return res.json({ ok: false, msg: '验证码错误' });
+  }
+
+  // 验证码通过 → 清除、创建/更新用户、生成会话
+  verificationCodes.delete(phone);
+
+  if (!users.has(phone)) {
+    users.set(phone, { phone, createdAt: Date.now() });
+    console.log(`  👤 新用户注册：${phone}`);
+  } else {
+    console.log(`  👤 用户登录：${phone}`);
+  }
+
+  const sessionId = crypto.randomBytes(24).toString('hex');
+  userSessions.set(sessionId, { phone, createdAt: Date.now() });
+
+  res.json({ ok: true, session: sessionId, phone: phone });
 });
 
 // ========== 后台管理页 ==========
