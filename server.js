@@ -9,7 +9,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const QR_VALID_MS = 30 * 60 * 1000; // 30分钟有效期
+const QR_VALID_MS = 5 * 60 * 1000; // 5分钟有效期
 
 // ========== 当前有效 token ==========
 let currentToken = '';
@@ -493,7 +493,7 @@ h2{font-size:22px;margin-bottom:6px}
   <div class="info-box">
     <div><span class="label">Token：</span><span class="val" id="infoToken">${currentToken.substring(0,16)}...</span></div>
     <div><span class="label">创建时间：</span><span class="val" id="infoTime">${new Date(tokenCreatedAt).toLocaleString('zh-CN')}</span></div>
-    <div><span class="label">有效期：</span><span class="val">30 分钟</span></div>
+    <div><span class="label">有效期：</span><span class="val">5 分钟</span></div>
   </div>
   <button class="btn-refresh" id="btnRefresh" onclick="doRefresh()">
     🔄 刷新二维码
@@ -602,7 +602,7 @@ h2{font-size:20px;color:#1a1a1a;margin-bottom:8px}
 <div class="card">
   <div class="icon">⏰</div>
   <h2>链接已过期</h2>
-  <p class="desc">该二维码链接已超过30分钟有效期<br>请联系管理员获取新的二维码</p>
+  <p class="desc">该二维码链接已超过5分钟有效期<br>请联系管理员获取新的二维码</p>
 </div>
 </body>
 </html>`;
@@ -630,7 +630,7 @@ setTimeout(() => {
 // ========== 启动 ==========
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`  ✅ 月月贷 扫码填表系统已启动 → 端口 ${PORT}`);
-  console.log(`  🕐 二维码有效期：30分钟`);
+  console.log(`  🕐 二维码有效期：5分钟`);
   console.log(`  🔧 后台管理：/admin`);
   console.log(`  🔄 自保活已启用（每3分钟）`);
 });
