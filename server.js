@@ -380,6 +380,19 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// ========== API：短信配置诊断 ==========
+app.get('/api/sms-status', (req, res) => {
+  const idMasked = IHUYI_API_ID ? IHUYI_API_ID.substring(0, 3) + '***' + IHUYI_API_ID.slice(-2) : '(空)';
+  const hasKey = !!IHUYI_API_KEY;
+  res.json({
+    enabled: SMS_ENABLED,
+    apiIdLength: IHUYI_API_ID.length,
+    apiIdMasked: idMasked,
+    hasApiKey: hasKey,
+    hint: SMS_ENABLED ? '短信已就绪' : '请在 Render Dashboard → Environment 中设置 IHUYI_API_ID 和 IHUYI_API_KEY'
+  });
+});
+
 // ========== API：发送短信验证码 ==========
 const sendCooldown = new Map();  // phone -> lastSendTime（防止频繁发送）
 app.post('/api/send-code', (req, res) => {
