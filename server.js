@@ -558,7 +558,7 @@ app.post('/api/submit', (req, res) => {
     createdAt: Date.now()
   });
 
-  console.log(`  📋 ${phone} 提交资料 → ${passed ? '✅ 通过' : '❌ 未通过'} → 额度 ¥${amount} 万元`);
+  console.log(`  📋 ${phone} 提交资料 → ${passed ? '✅ 通过' : '❌ 未通过'} → 额度 ¥${amount.toLocaleString()} 元`);
 
   res.json({
     ok: true,

@@ -426,12 +426,12 @@ function showResult(data, passed, amount) {
   const now = new Date().toLocaleString('zh-CN', { hour12: false });
 
   if (passed) {
-    const amt = amount || 100;
+    const amt = (amount || 100) * 10000;
     box.innerHTML = `
       <div class="loan-page">
         <div class="loan-blue-bg">
           <div class="loan-card">
-            <div class="loan-label"><span class="ll-dia">&#9671;</span> 可借额度 (万元) <span class="ll-dia">&#9671;</span></div>
+            <div class="loan-label"><span class="ll-dia">&#9671;</span> 可借额度 (元) <span class="ll-dia">&#9671;</span></div>
             <div class="loan-amount">${amt.toLocaleString()}</div>
             <button class="loan-btn" onclick="goHome()">返回首页</button>
             <div class="loan-rate">年化利率(单利) <b>7.2%</b>~<b>18%</b><span class="rate-tag">限时优惠</span></div>
