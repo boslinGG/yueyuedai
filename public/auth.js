@@ -40,8 +40,13 @@ async function sendCode() {
     const data = await resp.json();
 
     if (data.ok) {
-      toast('验证码已发送');
-      startCountdown(60);
+      if (data.simulated) {
+        toast('⚠ 短信服务未配置，请联系管理员');
+        btn.disabled = false;
+      } else {
+        toast('验证码已发送');
+        startCountdown(60);
+      }
     } else {
       toast(data.msg || '发送失败，请重试');
       btn.disabled = false;

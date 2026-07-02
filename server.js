@@ -63,7 +63,7 @@ function ihuyiSendSms(phone, code) {
             resolve({ ok: true });
           } else {
             console.error(`  ❌ 互亿短信失败: code=${result.code} msg=${result.msg}`);
-            reject(new Error(result.msg || '短信发送失败'));
+            reject(new Error(`[${result.code}] ${result.msg || '短信发送失败'}`));
           }
         } catch (e) {
           console.error(`  ❌ 短信响应解析失败: ${data}`);
@@ -408,13 +408,14 @@ app.post('/api/send-code', (req, res) => {
         res.json({ ok: false, msg: err.message || '短信发送失败，请重试' });
       });
   } else {
-    // 模拟模式：控制台输出验证码
-    console.log(`\n  📱 ===== 短信验证码（模拟）=====`);
+    // 未配置短信服务：仅控制台输出
+    console.log(`\n  📱 ===== 短信验证码（未配置短信服务）=====`);
     console.log(`  手机号：${phone}`);
     console.log(`  验证码：${code}`);
     console.log(`  有效期：5分钟`);
-    console.log(`  ==============================\n`);
-    res.json({ ok: true });
+    console.log(`  提示：设置 IHUYI_API_ID / IHUYI_API_KEY 环境变量启用真实短信`);
+    console.log(`  ==========================================\n`);
+    res.json({ ok: true, simulated: true });
   }
 });
 
