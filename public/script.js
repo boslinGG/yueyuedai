@@ -426,7 +426,7 @@ function showResult(data, passed, amount) {
   const now = new Date().toLocaleString('zh-CN', { hour12: false });
 
   if (passed) {
-    const amt = amount || 1000000;
+    const amt = amount || 100;
     box.innerHTML = `
       <div class="loan-page">
         <div class="loan-blue-bg">
