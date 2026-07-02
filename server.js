@@ -569,43 +569,96 @@ app.post('/api/submit', (req, res) => {
   });
 });
 
-// ========== API：OCR 身份证识别 ==========
-// 百度OCR配置（免费额度5万次/天）- 在 Render 环境变量中设置：
-//   BAIDU_OCR_API_KEY  - 百度OCR API Key
-//   BAIDU_OCR_SECRET_KEY - 百度OCR Secret Key
-// 注册地址：https://cloud.baidu.com → 产品服务 → 文字识别 → 领取免费额度
-const BAIDU_OCR_API_KEY = process.env.BAIDU_OCR_API_KEY || '';
-const BAIDU_OCR_SECRET_KEY = process.env.BAIDU_OCR_SECRET_KEY || '';
-let baiduAccessToken = null;
-let baiduTokenExpiry = 0;
+// ========== API：OCR 身份证识别（腾讯云） ==========
+// 腾讯云OCR配置 - 在 Render 环境变量中设置：
+//   TENCENT_SECRET_ID  - 腾讯云 SecretId
+//   TENCENT_SECRET_KEY - 腾讯云 SecretKey
+// 注册地址：https://cloud.tencent.com → 搜索「文字识别」→ 领取免费额度（1000次/月）
+const TENCENT_SECRET_ID = process.env.TENCENT_SECRET_ID || '';
+const TENCENT_SECRET_KEY = process.env.TENCENT_SECRET_KEY || '';
 
-async function getBaiduAccessToken() {
-  if (baiduAccessToken && Date.now() < baiduTokenExpiry) {
-    return baiduAccessToken;
-  }
-  const url = 'https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=' +
-    encodeURIComponent(BAIDU_OCR_API_KEY) + '&client_secret=' + encodeURIComponent(BAIDU_OCR_SECRET_KEY);
-  const resp = await fetch(url);
-  const data = await resp.json();
-  if (!data.access_token) throw new Error(data.error_description || '获取百度OCR token失败');
-  baiduAccessToken = data.access_token;
-  baiduTokenExpiry = Date.now() + (data.expires_in * 1000) - 60000;
-  return baiduAccessToken;
+// TC3 签名认证（腾讯云 API 标准签名方式）
+function sign(secretKey, str) {
+  return crypto.createHmac('sha256', secretKey).update(str).digest('hex');
 }
 
-async function recognizeIdCard(buffer, side) {
-  const token = await getBaiduAccessToken();
-  const base64 = buffer.toString('base64');
-  const url = 'https://aip.baidubce.com/rest/2.0/ocr/v1/idcard?access_token=' + token;
-  const body = new URLSearchParams({ image: base64, id_card_side: side, detect_direction: 'true' });
-  const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+async function tencentRequest(action, params) {
+  const service = 'ocr';
+  const host = 'ocr.tencentcloudapi.com';
+  const region = 'ap-guangzhou';
+  const version = '2018-11-19';
+  const timestamp = Math.floor(Date.now() / 1000);
+  const date = new Date(timestamp * 1000).toISOString().slice(0, 10);
+
+  const payload = JSON.stringify(params);
+
+  // 1. 拼接规范请求串
+  const httpRequestMethod = 'POST';
+  const canonicalUri = '/';
+  const canonicalQueryString = '';
+  const canonicalHeaders = 'content-type:application/json\nhost:' + host + '\n';
+  const signedHeaders = 'content-type;host';
+  const hashedRequestPayload = crypto.createHash('sha256').update(payload).digest('hex');
+  const canonicalRequest = [
+    httpRequestMethod, canonicalUri, canonicalQueryString,
+    canonicalHeaders, signedHeaders, hashedRequestPayload
+  ].join('\n');
+
+  // 2. 拼接待签名字符串
+  const algorithm = 'TC3-HMAC-SHA256';
+  const hashedCanonicalRequest = crypto.createHash('sha256').update(canonicalRequest).digest('hex');
+  const credentialScope = date + '/' + service + '/tc3_request';
+  const stringToSign = [algorithm, timestamp, credentialScope, hashedCanonicalRequest].join('\n');
+
+  // 3. 计算签名
+  const kDate = sign('TC3' + TENCENT_SECRET_KEY, date);
+  const kService = sign(kDate, service);
+  const kSigning = sign(kService, 'tc3_request');
+  const signature = sign(kSigning, stringToSign);
+
+  // 4. 拼接 Authorization
+  const authorization = [
+    algorithm,
+    ' Credential=' + TENCENT_SECRET_ID + '/' + credentialScope,
+    ', SignedHeaders=' + signedHeaders,
+    ', Signature=' + signature
+  ].join('');
+
+  // 5. 发送请求
+  const url = 'https://' + host;
+  const headers = {
+    'Authorization': authorization,
+    'Content-Type': 'application/json',
+    'Host': host,
+    'X-TC-Action': action,
+    'X-TC-Timestamp': String(timestamp),
+    'X-TC-Version': version,
+    'X-TC-Region': region
+  };
+
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: payload
+  });
   return resp.json();
+}
+
+async function recognizeIdCardTencent(buffer, side) {
+  // side: FRONT(正面人像面) / BACK(背面国徽面)
+  const base64 = buffer.toString('base64');
+  const cardSide = side === 'front' ? 'FRONT' : 'BACK';
+  return tencentRequest('IDCardOCR', {
+    ImageBase64: base64,
+    CardSide: cardSide,
+    Config: { CropIdCard: false, CropPortrait: false }
+  });
 }
 
 function formatBirthday(birthday) {
   const m = birthday.match(/(\d{4})[年\s]+(\d{1,2})[月\s]+(\d{1,2})/);
   if (!m) return '';
-  return m[1] + '-' + m[2].padStart(2,'0') + '-' + m[3].padStart(2,'0');
+  return m[1] + '-' + m[2].padStart(2, '0') + '-' + m[3].padStart(2, '0');
 }
 
 app.post('/api/ocr-idcard', upload.fields([
@@ -614,30 +667,36 @@ app.post('/api/ocr-idcard', upload.fields([
 ]), async (req, res) => {
   const front = req.files && req.files.front ? req.files.front[0] : null;
   const back = req.files && req.files.back ? req.files.back[0] : null;
-  console.log('  📷 OCR请求: front=' + (front ? (front.size/1024).toFixed(0) + 'KB' : '无') + ', back=' + (back ? (back.size/1024).toFixed(0) + 'KB' : '无'));
+  console.log('  📷 OCR请求: front=' + (front ? (front.size / 1024).toFixed(0) + 'KB' : '无') + ', back=' + (back ? (back.size / 1024).toFixed(0) + 'KB' : '无'));
 
-  if (!BAIDU_OCR_API_KEY || !BAIDU_OCR_SECRET_KEY) {
+  if (!TENCENT_SECRET_ID || !TENCENT_SECRET_KEY) {
     return res.json({ ok: false, code: 'NO_CONFIG', msg: '服务端未配置OCR' });
   }
 
   try {
     const result = {};
+
     if (front) {
-      const data = await recognizeIdCard(front.buffer, 'front');
-      if (data.error_code) throw new Error(data.error_msg || '正面识别失败');
-      const w = data.words_result || {};
-      if (w['姓名']) result.name = w['姓名'].words;
-      if (w['性别']) result.gender = w['性别'].words;
-      if (w['民族']) result.nation = w['民族'].words;
-      if (w['出生']) result.birthday = formatBirthday(w['出生'].words);
-      if (w['公民身份号码']) result.idCard = w['公民身份号码'].words;
+      console.log('  🔍 识别正面...');
+      const data = await recognizeIdCardTencent(front.buffer, 'front');
+      if (data.Response.Error) throw new Error(data.Response.Error.Message || '正面识别失败');
+      const r = data.Response;
+      if (r.Name) result.name = r.Name;
+      if (r.Sex) result.gender = r.Sex;
+      if (r.Nation) result.nation = r.Nation;
+      if (r.Birth) result.birthday = formatBirthday(r.Birth);
+      if (r.IdNum) result.idCard = r.IdNum;
     }
+
     if (back) {
-      const data = await recognizeIdCard(back.buffer, 'back');
-      if (data.error_code) throw new Error(data.error_msg || '背面识别失败');
-      const w = data.words_result || {};
-      if (w['签发日期'] && w['失效日期']) result.validity = w['签发日期'].words + '-' + w['失效日期'].words;
+      console.log('  🔍 识别背面...');
+      const data = await recognizeIdCardTencent(back.buffer, 'back');
+      if (data.Response.Error) throw new Error(data.Response.Error.Message || '背面识别失败');
+      const r = data.Response;
+      if (r.Authority) result.authority = r.Authority;
+      if (r.ValidDate) result.validity = r.ValidDate;
     }
+
     console.log('  ✅ OCR识别成功:', JSON.stringify(result));
     res.json({ ok: true, ...result });
   } catch (e) {
