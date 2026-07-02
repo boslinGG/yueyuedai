@@ -27,7 +27,10 @@ function ihuyiSendSms(phone, code) {
       return resolve({ ok: true, simulated: true });
     }
 
-    const content = `您的验证码是：${code}。请不要把验证码泄露给其他人。`;
+    // 使用模板变量方式：系统默认模板(templateid=1)
+    // 模板内容："您的验证码是：【变量】。请不要把验证码泄露给其他人。"
+    // content 只需传验证码数值
+    const content = code;
     const time = Math.floor(Date.now() / 1000).toString();
     const password = crypto.createHash('md5')
       .update(IHUYI_API_ID + IHUYI_API_KEY + phone + content + time)
@@ -38,6 +41,7 @@ function ihuyiSendSms(phone, code) {
       password: password,
       mobile: phone,
       content: content,
+      templateid: '1',
       time: time,
       format: 'json',
     }).toString();
