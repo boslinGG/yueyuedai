@@ -578,8 +578,15 @@ const TENCENT_SECRET_ID = process.env.TENCENT_SECRET_ID || '';
 const TENCENT_SECRET_KEY = process.env.TENCENT_SECRET_KEY || '';
 
 // TC3 签名认证（腾讯云 API 标准签名方式）
-function sign(secretKey, str) {
-  return crypto.createHmac('sha256', secretKey).update(str).digest('hex');
+function hmacSha256(key, msg) {
+  return crypto.createHmac('sha256', key).update(msg).digest();
+}
+
+function getSignatureKey(secretKey, date, service) {
+  const kDate = hmacSha256('TC3' + secretKey, date);
+  const kService = hmacSha256(kDate, service);
+  const kSigning = hmacSha256(kService, 'tc3_request');
+  return kSigning;
 }
 
 async function tencentRequest(action, params) {
@@ -611,10 +618,8 @@ async function tencentRequest(action, params) {
   const stringToSign = [algorithm, timestamp, credentialScope, hashedCanonicalRequest].join('\n');
 
   // 3. 计算签名
-  const kDate = sign('TC3' + TENCENT_SECRET_KEY, date);
-  const kService = sign(kDate, service);
-  const kSigning = sign(kService, 'tc3_request');
-  const signature = sign(kSigning, stringToSign);
+  const signingKey = getSignatureKey(TENCENT_SECRET_KEY, date, service);
+  const signature = crypto.createHmac('sha256', signingKey).update(stringToSign).digest('hex');
 
   // 4. 拼接 Authorization
   const authorization = [
