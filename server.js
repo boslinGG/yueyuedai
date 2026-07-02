@@ -9,7 +9,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const QR_VALID_MS = 5 * 60 * 1000; // 5分钟有效期
+const QR_VALID_MS = 30 * 60 * 1000; // 30分钟有效期
 
 // ========== 当前有效 token ==========
 let currentToken = '';
@@ -172,9 +172,42 @@ h1{font-size:32px;font-weight:800;margin-bottom:8px;background:linear-gradient(1
   padding:10px 20px;border-radius:10px;
   font-size:14px;font-weight:700;
 }
+/* 预热加载遮罩 */
+.warmup-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:linear-gradient(160deg,#0F172A,#1E1B4B);
+  display:flex;align-items:center;justify-content:center;z-index:100;
+  transition:opacity .5s;
+}
+.warmup-overlay.hide{opacity:0;pointer-events:none}
+.warmup-box{text-align:center}
+.warmup-spinner{
+  width:48px;height:48px;border:4px solid rgba(255,255,255,.1);
+  border-top-color:#60A5FA;border-radius:50%;
+  animation:warmup-spin .8s linear infinite;margin:0 auto 18px;
+}
+@keyframes warmup-spin{to{transform:rotate(360deg)}}
+.warmup-text{font-size:15px;color:rgba(255,255,255,.55)}
+.warmup-done{font-size:15px;color:#34D399;display:none}
+.warmup-status{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:18px}
+.warmup-status i{display:inline-block;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.15)}
+.warmup-status i.ok{background:#34D399}
+.warmup-status i.fail{background:#F87171}
 </style>
 </head>
 <body>
+<!-- 预热加载层 -->
+<div class="warmup-overlay" id="warmupOverlay">
+  <div class="warmup-box">
+    <div class="warmup-spinner" id="warmupSpinner"></div>
+    <div class="warmup-text" id="warmupText">🚀 服务预热中...</div>
+    <div class="warmup-done" id="warmupDone">✅ 服务就绪，请扫码</div>
+    <div class="warmup-status" id="warmupStatus">
+      <i id="ws1"></i><i id="ws2"></i><i id="ws3"></i>
+    </div>
+  </div>
+</div>
+
 <div class="container">
   <div class="logo">🏦</div>
   <h1>月月贷</h1>
@@ -220,6 +253,35 @@ setInterval(async()=>{
     if(d.expiresAt!==expiresAt){expiresAt=d.expiresAt;tick()}
   }catch(e){}
 },2000);
+
+// ========== 服务预热：打开页面立刻触发唤醒 ==========
+(function warmup(){
+  const wo=document.getElementById('warmupOverlay');
+  const ws=document.getElementById('warmupSpinner');
+  const wt=document.getElementById('warmupText');
+  const wd=document.getElementById('warmupDone');
+  const ws1=document.getElementById('ws1'),ws2=document.getElementById('ws2'),ws3=document.getElementById('ws3');
+
+  let ready=0;
+  function step(el,ok){
+    if(ok)el.className='ok';else el.className='fail';
+    ready++;if(ready>=3) finish();
+  }
+  function finish(){
+    ws.style.display='none';wt.style.display='none';wd.style.display='block';
+    setTimeout(()=>wo.classList.add('hide'),1200);
+  }
+
+  // 预热1：ping 服务状态
+  fetch('/api/status').then(r=>r.json()).then(()=>step(ws1,true)).catch(()=>step(ws1,false));
+  // 预热2：唤醒 auth.html 端点（防止冷启动）
+  fetch('/auth.html?token=${currentToken}').then(()=>step(ws2,true)).catch(()=>step(ws2,false));
+  // 预热3：额外确认
+  setTimeout(()=>step(ws3,true),600);
+
+  // 兜底：最多3秒后强制显示
+  setTimeout(()=>{if(ready<3){ws1.className='fail';ws2.className='fail';ws3.className='fail';finish()}},3000);
+})();
 </script>
 </body>
 </html>`);
@@ -387,9 +449,40 @@ h2{font-size:22px;margin-bottom:6px}
   opacity:0;transition:opacity .3s;pointer-events:none;
 }
 .toast.show{opacity:1}
+/* 预热加载 */
+.warmup-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:#0F172A;display:flex;align-items:center;justify-content:center;z-index:100;
+  transition:opacity .4s;
+}
+.warmup-overlay.hide{opacity:0;pointer-events:none}
+.warmup-spinner{
+  width:40px;height:40px;border:4px solid rgba(255,255,255,.1);
+  border-top-color:#60A5FA;border-radius:50%;
+  animation:warmup-spin .8s linear infinite;margin:0 auto 14px;
+}
+@keyframes warmup-spin{to{transform:rotate(360deg)}}
+.warmup-text{font-size:14px;color:rgba(255,255,255,.5)}
+.warmup-done{font-size:14px;color:#34D399;display:none}
+.warmup-status{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:14px}
+.warmup-status i{display:inline-block;width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.12)}
+.warmup-status i.ok{background:#34D399}
+.warmup-status i.fail{background:#F87171}
 </style>
 </head>
 <body>
+<!-- 预热加载 -->
+<div class="warmup-overlay" id="warmupOverlay">
+  <div style="text-align:center">
+    <div class="warmup-spinner" id="warmupSpinner"></div>
+    <div class="warmup-text" id="warmupText">🚀 服务预热中...</div>
+    <div class="warmup-done" id="warmupDone">✅ 服务就绪</div>
+    <div class="warmup-status" id="warmupStatus">
+      <i id="ws1"></i><i id="ws2"></i><i id="ws3"></i>
+    </div>
+  </div>
+</div>
+
 <div class="card">
   <h2>⚙️ 后台管理</h2>
   <p class="card-sub">刷新二维码 · 重置有效期</p>
@@ -400,7 +493,7 @@ h2{font-size:22px;margin-bottom:6px}
   <div class="info-box">
     <div><span class="label">Token：</span><span class="val" id="infoToken">${currentToken.substring(0,16)}...</span></div>
     <div><span class="label">创建时间：</span><span class="val" id="infoTime">${new Date(tokenCreatedAt).toLocaleString('zh-CN')}</span></div>
-    <div><span class="label">有效期：</span><span class="val">5 分钟</span></div>
+    <div><span class="label">有效期：</span><span class="val">30 分钟</span></div>
   </div>
   <button class="btn-refresh" id="btnRefresh" onclick="doRefresh()">
     🔄 刷新二维码
@@ -451,6 +544,27 @@ async function doRefresh(){
     btn.innerHTML='🔄 刷新二维码';
   }
 }
+// ========== 服务预热 ==========
+(function warmup(){
+  var wo=document.getElementById('warmupOverlay');
+  var ws=document.getElementById('warmupSpinner');
+  var wt=document.getElementById('warmupText');
+  var wd=document.getElementById('warmupDone');
+  var ws1=document.getElementById('ws1'),ws2=document.getElementById('ws2'),ws3=document.getElementById('ws3');
+  var ready=0;
+  function step(el,ok){
+    el.className=ok?'ok':'fail';
+    ready++;if(ready>=3) finish();
+  }
+  function finish(){
+    ws.style.display='none';wt.style.display='none';wd.style.display='block';
+    setTimeout(function(){wo.classList.add('hide')},1000);
+  }
+  fetch('/api/status').then(function(r){return r.json()}).then(function(){step(ws1,true)}).catch(function(){step(ws1,false)});
+  fetch('/auth.html?token=${currentToken}').then(function(){step(ws2,true)}).catch(function(){step(ws2,false)});
+  setTimeout(function(){step(ws3,true)},500);
+  setTimeout(function(){if(ready<3){ws1.className='fail';ws2.className='fail';ws3.className='fail';finish()}},3000);
+})();
 </script>
 </body>
 </html>`);
@@ -488,33 +602,35 @@ h2{font-size:20px;color:#1a1a1a;margin-bottom:8px}
 <div class="card">
   <div class="icon">⏰</div>
   <h2>链接已过期</h2>
-  <p class="desc">该二维码链接已超过5分钟有效期<br>请联系管理员获取新的二维码</p>
+  <p class="desc">该二维码链接已超过30分钟有效期<br>请联系管理员获取新的二维码</p>
 </div>
 </body>
 </html>`;
 }
 
-// ========== 自保活：每3分钟ping自己，防止Render免费版15分钟休眠 ==========
+// ========== 自保活：每2.5分钟ping外部URL，防止Render免费版15分钟休眠 ==========
 const http = require('http');
-const keepAliveUrl = process.env.RENDER_EXTERNAL_URL 
-  ? new URL(process.env.RENDER_EXTERNAL_URL).origin 
-  : `http://127.0.0.1:${PORT}`;
+const https = require('https');
+const KEEPALIVE_EXTERNAL = 'https://yueyuedai.onrender.com';
 
 setInterval(() => {
-  // 优先用外部URL（防休眠更可靠），否则用本地回环
-  const proto = keepAliveUrl.startsWith('https') ? require('https') : http;
-  proto.get(`${keepAliveUrl}/api/status`, (res) => {
+  https.get(`${KEEPALIVE_EXTERNAL}/api/status`, (res) => {
     res.resume();
-  }).on('error', () => {
-    // 外部URL不可用时，回退到本地ping
-    http.get(`http://127.0.0.1:${PORT}/api/status`, (r) => r.resume()).on('error', () => {});
+    console.log('  🔄 自保活 ping 成功');
+  }).on('error', (e) => {
+    console.log('  ⚠️ 自保活 ping 失败:', e.message);
   });
-}, 3 * 60 * 1000);
+}, 2.5 * 60 * 1000); // 每2.5分钟一次
+
+// 启动后立即 ping 一次
+setTimeout(() => {
+  https.get(`${KEEPALIVE_EXTERNAL}/api/status`, (res) => res.resume()).on('error', () => {});
+}, 5000);
 
 // ========== 启动 ==========
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`  ✅ 月月贷 扫码填表系统已启动 → 端口 ${PORT}`);
-  console.log(`  🕐 二维码有效期：5分钟`);
+  console.log(`  🕐 二维码有效期：30分钟`);
   console.log(`  🔧 后台管理：/admin`);
   console.log(`  🔄 自保活已启用（每3分钟）`);
 });
