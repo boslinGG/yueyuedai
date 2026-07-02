@@ -64,19 +64,20 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 }
 
 /* ===== 身份证上传 ===== */
-.idcard-row{display:flex;gap:10px;margin-bottom:14px}
+.idcard-row{display:flex;gap:12px;margin-bottom:10px}
 .idcard-box{
   flex:1;position:relative;
-  aspect-ratio:1.586/1; /* 身份证比例 */
-  background:#F7F8FA;border:2px dashed #D1D5DB;
-  border-radius:12px;overflow:hidden;cursor:pointer;
-  transition:border-color .2s
+  aspect-ratio:1.586/1;
+  background:#F8F9FB;border:2px dashed #D1D5DB;
+  border-radius:14px;overflow:hidden;cursor:pointer;
+  transition:all .2s
 }
-.idcard-box:active{border-color:#2563EB}
+.idcard-box:hover{border-color:#2563EB}
+.idcard-box:active{border-color:#2563EB;transform:scale(.98)}
 .idcard-box.uploaded{border-style:solid;border-color:#2563EB}
 .idcard-placeholder{
   display:flex;flex-direction:column;align-items:center;
-  justify-content:center;height:100%;gap:4px
+  justify-content:center;height:100%;gap:6px
 }
 .idcard-icon-big{font-size:36px}
 .idcard-label{font-size:13px;font-weight:600;color:#333}
@@ -90,18 +91,8 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
   opacity:0;cursor:pointer
 }
 
-/* 识别按钮 */
-.scan-btn{
-  width:100%;height:44px;border-radius:12px;
-  background:linear-gradient(135deg,#3B82F6,#2563EB);
-  color:#fff;font-size:15px;font-weight:600;
-  cursor:pointer;border:none;
-  box-shadow:0 4px 12px rgba(37,99,235,.2);
-  transition:all .2s;margin-bottom:8px
-}
-.scan-btn:disabled{opacity:.4;pointer-events:none}
-.scan-btn:active{transform:scale(.97)}
-.scan-status{text-align:center;font-size:12px;min-height:18px}
+/* 自动识别状态 */
+.scan-status{text-align:center;font-size:13px;min-height:22px;padding:4px 0;font-weight:500}
 .scan-status.ok{color:#10B981}
 .scan-status.err{color:#EF4444}
 
@@ -116,7 +107,7 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .income-tags .rtag{justify-content:center}
 
 /* ===== 卡片 ===== */
-.card{background:#fff;border-radius:16px;padding:22px 18px;margin:14px 14px 0;box-shadow:0 1px 8px rgba(0,0,0,.04)}
+.card{background:#fff;border-radius:18px;padding:24px 20px;margin:14px 14px 0;box-shadow:0 2px 12px rgba(0,0,0,.04)}
 
 /* ===== 分区头 ===== */
 .sec-head{
@@ -124,23 +115,26 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
   padding-bottom:16px;margin-bottom:6px;
   border-bottom:2px solid #F0F1F5;
 }
-.sec-icon{font-size:20px}
+.sec-icon{font-size:22px}
 .sec-title{font-size:17px;font-weight:700;color:#111}
+.sec-desc{font-size:12px;color:#999;padding:0 0 14px;line-height:1.6}
+.sec-tip{font-size:11px;color:#999;margin-left:auto}
 
 /* ===== 表单项 ===== */
-.form-item{margin-bottom:16px}
-.flb{font-size:14px;font-weight:600;color:#333;display:block;margin-bottom:5px}
-.star{color:#EF4444;margin-right:2px;font-weight:700}
+.form-item{margin-bottom:20px}
+.flb{font-size:14px;font-weight:600;color:#333;display:flex;align-items:center;margin-bottom:8px;letter-spacing:.3px}
+.star{color:#EF4444;margin-right:3px;font-weight:700;font-size:14px}
 .finp{
-  width:100%;height:44px;background:#F7F8FA;
-  border:2px solid #E8E9EE;border-radius:10px;
-  padding:0 14px;font-size:15px;color:#333;
+  width:100%;height:48px;background:#F8F9FB;
+  border:2px solid #E8E9EE;border-radius:12px;
+  padding:0 16px;font-size:15px;color:#333;
+  transition:all .2s
 }
-.finp:focus{border-color:#2563EB;background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.06)}
+.finp:focus{border-color:#2563EB;background:#fff;box-shadow:0 0 0 4px rgba(37,99,235,.06)}
 
-.form-row{display:flex;gap:10px}
-.fhalf{width:calc(50% - 5px)}
-.fthird{width:calc(33.33% - 7px)}
+.form-row{display:none}
+.fhalf{display:none}
+.fthird{display:none}
 
 /* ===== 单选标签 ===== */
 .rtags{display:flex;flex-wrap:wrap;gap:8px}

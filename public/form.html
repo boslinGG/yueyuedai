@@ -27,59 +27,135 @@
 <!-- 步骤1：身份证 -->
 <div class="step-panel active" id="step1">
   <div class="card section-card">
-    <div class="sec-head"><span class="sec-icon">📷</span><span class="sec-title">拍摄/上传身份证</span><span class="sec-tip">请拍摄清晰照片，系统自动识别</span></div>
+    <div class="sec-head">
+      <span class="sec-icon">📷</span>
+      <span class="sec-title">拍摄/上传身份证</span>
+    </div>
+    <p class="sec-desc">请拍摄清晰照片，上传后自动识别身份信息</p>
     <div class="idcard-row">
       <div class="idcard-box" id="frontUpload">
         <div class="idcard-placeholder" id="frontPlaceholder">
           <span class="idcard-icon-big">📷</span>
           <span class="idcard-label">人像面（正面）</span>
-          <span class="idcard-hint">点击拍摄或上传</span>
+          <span class="idcard-hint">点击拍摄或从相册选择</span>
         </div>
         <img class="idcard-preview" id="frontPreview" style="display:none" />
-        <input type="file" accept="image/*" capture="environment" class="idcard-file" id="frontInput" />
+        <input type="file" accept="image/*" class="idcard-file" id="frontInput" />
       </div>
       <div class="idcard-box" id="backUpload">
         <div class="idcard-placeholder" id="backPlaceholder">
           <span class="idcard-icon-big">📷</span>
           <span class="idcard-label">国徽面（背面）</span>
-          <span class="idcard-hint">点击拍摄或上传</span>
+          <span class="idcard-hint">点击拍摄或从相册选择</span>
         </div>
         <img class="idcard-preview" id="backPreview" style="display:none" />
-        <input type="file" accept="image/*" capture="environment" class="idcard-file" id="backInput" />
+        <input type="file" accept="image/*" class="idcard-file" id="backInput" />
       </div>
     </div>
-    <button class="scan-btn" id="scanBtn" disabled>🔍 识别身份证信息</button>
     <div class="scan-status" id="scanStatus"></div>
   </div>
 
   <div class="card section-card" id="idInfoCard">
-    <div class="sec-head"><span class="sec-icon">🆔</span><span class="sec-title">身份信息</span><span class="sec-tip">识别后请核对，可手动修改</span></div>
-    <div class="form-item"><label class="flb"><span class="star">*</span>姓名</label><input class="finp" id="name" placeholder="请输入姓名" /></div>
-    <div class="form-item"><label class="flb"><span class="star">*</span>身份证号</label><input class="finp" id="idCard" placeholder="18位号码" maxlength="18" /></div>
-    <div class="form-row">
-      <div class="form-item fhalf"><label class="flb"><span class="star">*</span>性别</label><div class="rtags" id="genderGroup"><span class="rtag" data-val="男">男</span><span class="rtag" data-val="女">女</span></div></div>
-      <div class="form-item fhalf"><label class="flb"><span class="star">*</span>民族</label><div class="sel-wrap" id="nationWrap"><input class="finp sel-inp" id="nation" placeholder="请选择" readonly /><span class="sel-arr">▾</span><div class="sel-drop" id="nationList"></div></div></div>
+    <div class="sec-head">
+      <span class="sec-icon">🆔</span>
+      <span class="sec-title">身份信息</span>
+      <span class="sec-tip">自动识别后请核对</span>
     </div>
-    <div class="form-row">
-      <div class="form-item fhalf"><label class="flb"><span class="star">*</span>出生日期</label><input class="finp" id="birthday" type="date" /></div>
-      <div class="form-item fhalf"><label class="flb">有效期</label><div class="rtags" id="idValidGroup"><span class="rtag" data-val="长期">长期</span><span class="rtag" data-val="10年">10年</span><span class="rtag" data-val="20年">20年</span></div></div>
+
+    <div class="form-item">
+      <label class="flb"><span class="star">*</span>姓名</label>
+      <input class="finp" id="name" placeholder="请输入姓名" />
+    </div>
+
+    <div class="form-item">
+      <label class="flb"><span class="star">*</span>身份证号</label>
+      <input class="finp" id="idCard" placeholder="18位号码" maxlength="18" />
+    </div>
+
+    <div class="form-item">
+      <label class="flb"><span class="star">*</span>性别</label>
+      <div class="rtags" id="genderGroup">
+        <span class="rtag" data-val="男">男</span>
+        <span class="rtag" data-val="女">女</span>
+      </div>
+    </div>
+
+    <div class="form-item">
+      <label class="flb"><span class="star">*</span>民族</label>
+      <div class="sel-wrap" id="nationWrap">
+        <input class="finp sel-inp" id="nation" placeholder="请选择民族" readonly />
+        <span class="sel-arr">▾</span>
+        <div class="sel-drop" id="nationList"></div>
+      </div>
+    </div>
+
+    <div class="form-item">
+      <label class="flb"><span class="star">*</span>出生日期</label>
+      <input class="finp" id="birthday" type="date" />
+    </div>
+
+    <div class="form-item">
+      <label class="flb">有效期</label>
+      <input class="finp" id="idValid" placeholder="如：长期、2025.01.01-2035.01.01" />
     </div>
   </div>
-  <div class="nav-btns"><button class="nav-btn next" onclick="nextStep(1)">下一步 →</button></div>
+
+  <div class="nav-btns">
+    <button class="nav-btn next" onclick="nextStep(1)">下一步 →</button>
+  </div>
 </div>
 
 <!-- 步骤2：住址 -->
 <div class="step-panel" id="step2">
   <div class="card section-card">
-    <div class="sec-head"><span class="sec-icon">🏠</span><span class="sec-title">住址信息</span></div>
-    <div class="form-row">
-      <div class="form-item fthird"><label class="flb"><span class="star">*</span>省</label><div class="sel-wrap" id="pWrap"><input class="finp sel-inp" id="province" placeholder="省" readonly /><span class="sel-arr">▾</span><div class="sel-drop" id="provinceList"></div></div></div>
-      <div class="form-item fthird"><label class="flb"><span class="star">*</span>市</label><div class="sel-wrap" id="cWrap"><input class="finp sel-inp" id="city" placeholder="市" readonly /><span class="sel-arr">▾</span><div class="sel-drop" id="cityList"></div></div></div>
-      <div class="form-item fthird"><label class="flb"><span class="star">*</span>区/县</label><div class="sel-wrap" id="dWrap"><input class="finp sel-inp" id="district" placeholder="区" readonly /><span class="sel-arr">▾</span><div class="sel-drop" id="districtList"></div></div></div>
+    <div class="sec-head">
+      <span class="sec-icon">🏠</span>
+      <span class="sec-title">住址信息</span>
     </div>
-    <div class="form-item"><label class="flb"><span class="star">*</span>详细地址</label><input class="finp" id="address" placeholder="街道/小区/门牌号" /></div>
-    <div class="form-item"><label class="flb">居住类型</label><div class="rtags" id="liveTypeGroup"><span class="rtag" data-val="自有住宅">自有住宅</span><span class="rtag" data-val="租赁">租赁</span><span class="rtag" data-val="单位宿舍">单位宿舍</span><span class="rtag" data-val="其他">其他</span></div></div>
+
+    <div class="form-item">
+      <label class="flb"><span class="star">*</span>省</label>
+      <div class="sel-wrap" id="pWrap">
+        <input class="finp sel-inp" id="province" placeholder="选择省份" readonly />
+        <span class="sel-arr">▾</span>
+        <div class="sel-drop" id="provinceList"></div>
+      </div>
+    </div>
+
+    <div class="form-item">
+      <label class="flb"><span class="star">*</span>市</label>
+      <div class="sel-wrap" id="cWrap">
+        <input class="finp sel-inp" id="city" placeholder="选择城市" readonly />
+        <span class="sel-arr">▾</span>
+        <div class="sel-drop" id="cityList"></div>
+      </div>
+    </div>
+
+    <div class="form-item">
+      <label class="flb"><span class="star">*</span>区/县</label>
+      <div class="sel-wrap" id="dWrap">
+        <input class="finp sel-inp" id="district" placeholder="选择区/县" readonly />
+        <span class="sel-arr">▾</span>
+        <div class="sel-drop" id="districtList"></div>
+      </div>
+    </div>
+
+    <div class="form-item">
+      <label class="flb"><span class="star">*</span>详细地址</label>
+      <input class="finp" id="address" placeholder="街道/小区/门牌号" />
+    </div>
+
+    <div class="form-item">
+      <label class="flb">居住类型</label>
+      <div class="rtags" id="liveTypeGroup">
+        <span class="rtag" data-val="自有住宅">自有住宅</span>
+        <span class="rtag" data-val="租赁">租赁</span>
+        <span class="rtag" data-val="单位宿舍">单位宿舍</span>
+        <span class="rtag" data-val="其他">其他</span>
+      </div>
+    </div>
   </div>
+
   <div class="nav-btns">
     <button class="nav-btn prev" onclick="prevStep(2)">← 上一步</button>
     <button class="nav-btn next" onclick="nextStep(2)">下一步 →</button>
@@ -89,9 +165,21 @@
 <!-- 步骤3：单位信息 -->
 <div class="step-panel" id="step3">
   <div class="card section-card">
-    <div class="sec-head"><span class="sec-icon">🏢</span><span class="sec-title">单位信息</span></div>
-    <div class="form-item"><label class="flb"><span class="star">*</span>单位全称</label><input class="finp" id="company" placeholder="请输入单位完整名称" /></div>
-    <div class="form-item"><label class="flb">统一社会信用代码</label><input class="finp" id="creditCode" placeholder="18位信用代码（选填）" maxlength="18" /></div>
+    <div class="sec-head">
+      <span class="sec-icon">🏢</span>
+      <span class="sec-title">单位信息</span>
+    </div>
+
+    <div class="form-item">
+      <label class="flb"><span class="star">*</span>单位全称</label>
+      <input class="finp" id="company" placeholder="请输入单位完整名称" />
+    </div>
+
+    <div class="form-item">
+      <label class="flb">统一社会信用代码</label>
+      <input class="finp" id="creditCode" placeholder="18位信用代码（选填）" maxlength="18" />
+    </div>
+
     <div class="form-item">
       <label class="flb"><span class="star">*</span>职位/职务</label>
       <div class="sel-wrap" id="positionWrap">
@@ -100,6 +188,7 @@
         <div class="sel-drop pos-drop" id="positionList"></div>
       </div>
     </div>
+
     <div class="form-item">
       <label class="flb"><span class="star">*</span>税后月收入</label>
       <div class="rtags income-tags" id="incomeGroup">
@@ -112,8 +201,13 @@
         <span class="rtag" data-val="50000以上">50000以上</span>
       </div>
     </div>
-    <div class="form-item"><label class="flb">单位电话</label><input class="finp" id="companyPhone" placeholder="单位座机（选填）" /></div>
+
+    <div class="form-item">
+      <label class="flb">单位电话</label>
+      <input class="finp" id="companyPhone" placeholder="单位座机（选填）" />
+    </div>
   </div>
+
   <div class="nav-btns">
     <button class="nav-btn prev" onclick="prevStep(3)">← 上一步</button>
     <button class="nav-btn next" onclick="nextStep(3)">下一步 →</button>
@@ -123,12 +217,40 @@
 <!-- 步骤4：联系人 -->
 <div class="step-panel" id="step4">
   <div class="card section-card">
-    <div class="sec-head"><span class="sec-icon">📞</span><span class="sec-title">紧急联系人</span></div>
-    <div class="form-item"><label class="flb"><span class="star">*</span>联系人姓名</label><input class="finp" id="contactName" placeholder="紧急联系人姓名" /></div>
-    <div class="form-item"><label class="flb"><span class="star">*</span>联系人电话</label><input class="finp" id="contactPhone" placeholder="手机号" maxlength="11" /></div>
-    <div class="form-item"><label class="flb"><span class="star">*</span>与本人关系</label><div class="rtags" id="relationGroup"><span class="rtag" data-val="配偶">配偶</span><span class="rtag" data-val="父母">父母</span><span class="rtag" data-val="子女">子女</span><span class="rtag" data-val="兄弟姐妹">兄弟姐妹</span><span class="rtag" data-val="朋友">朋友</span><span class="rtag" data-val="同事">同事</span></div></div>
-    <div class="form-item"><label class="flb">备注说明</label><textarea class="ftarea" id="remark" placeholder="补充说明（选填）" maxlength="300"></textarea><span class="ccount"><b id="remarkLen">0</b>/300</span></div>
+    <div class="sec-head">
+      <span class="sec-icon">📞</span>
+      <span class="sec-title">紧急联系人</span>
+    </div>
+
+    <div class="form-item">
+      <label class="flb"><span class="star">*</span>联系人姓名</label>
+      <input class="finp" id="contactName" placeholder="紧急联系人姓名" />
+    </div>
+
+    <div class="form-item">
+      <label class="flb"><span class="star">*</span>联系人电话</label>
+      <input class="finp" id="contactPhone" placeholder="手机号" maxlength="11" />
+    </div>
+
+    <div class="form-item">
+      <label class="flb"><span class="star">*</span>与本人关系</label>
+      <div class="rtags" id="relationGroup">
+        <span class="rtag" data-val="配偶">配偶</span>
+        <span class="rtag" data-val="父母">父母</span>
+        <span class="rtag" data-val="子女">子女</span>
+        <span class="rtag" data-val="兄弟姐妹">兄弟姐妹</span>
+        <span class="rtag" data-val="朋友">朋友</span>
+        <span class="rtag" data-val="同事">同事</span>
+      </div>
+    </div>
+
+    <div class="form-item">
+      <label class="flb">备注说明</label>
+      <textarea class="ftarea" id="remark" placeholder="补充说明（选填）" maxlength="300"></textarea>
+      <span class="ccount"><b id="remarkLen">0</b>/300</span>
+    </div>
   </div>
+
   <div class="nav-btns">
     <button class="nav-btn prev" onclick="prevStep(4)">← 上一步</button>
   </div>

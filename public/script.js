@@ -1,5 +1,5 @@
 /**
- * 月月贷 - 四步资料填写（含身份证OCR识别）
+ * 月月贷 - 四步资料填写（含身份证OCR自动识别）
  */
 const $ = (id) => document.getElementById(id);
 
@@ -139,49 +139,27 @@ $('nationWrap').addEventListener('click', (e) => { e.stopPropagation(); $('natio
 
 // ============ 职位下拉（全面） ============
 const POSITIONS = [
-  // 企业高管
   '董事长','首席执行官CEO','总裁','副总裁','总经理','副总经理','总监',
-  // 管理岗
   '部门经理','项目经理','主管','组长','厂长','主任','店长',
-  // 技术研发
   '高级工程师','软件工程师','硬件工程师','架构师','算法工程师','数据分析师','测试工程师','运维工程师','前端工程师','后端工程师','全栈工程师','Android工程师','iOS工程师',
-  // 设计
   'UI设计师','UX设计师','平面设计师','产品设计师','室内设计师',
-  // 产品/运营
   '产品经理','运营经理','运营专员','产品助理',
-  // 财务/会计
   '财务总监','财务经理','会计','出纳','审计',
-  // 人事/行政
   '人力资源总监','招聘专员','行政经理','行政专员','文员','前台','秘书',
-  // 市场/销售
   '市场总监','市场经理','销售总监','销售经理','销售代表','客户经理','商务专员','品牌经理',
-  // 金融/保险
   '理财顾问','投资经理','保险代理人','风控专员','信贷员','柜员',
-  // 医疗
   '主任医师','主治医师','护士长','护士','药剂师',
-  // 教育
   '教授','副教授','讲师','助教','教师','幼师',
-  // 法律
   '律师','法务','法律顾问',
-  // 工程/建筑
   '工程师','监理','造价员','施工员','安全员','测量员','材料员',
-  // 媒体/公关
   '编辑','记者','摄影师','视频剪辑师','公关专员',
-  // 物流
   '物流经理','快递员','仓管','采购专员','供应链专员',
-  // 餐饮/服务
   '厨师','服务员','调酒师','理发师','美容师','按摩师',
-  // 政府/事业单位
   '公务员','事业编制人员','社区工作人员','辅警',
-  // 工人/技工
   '电工','焊工','机修工','操作工','质检员','普工',
-  // 司机
   '货车司机','出租车司机','私家司机','公交车司机',
-  // 个体/自由职业
   '个体工商户','自由职业者','网店店主','自媒体运营','主播',
-  // 农业
   '农民','养殖户','园丁',
-  // 其他
   '学生','退休','无业','其他'
 ];
 buildDrop('positionList', POSITIONS, 'position', 'positionWrap');
@@ -234,8 +212,8 @@ document.addEventListener('click', () => { document.querySelectorAll('.sel-drop.
 // ============ 备注计数 ============
 $('remark').addEventListener('input', function() { $('remarkLen').textContent = this.value.length; });
 
-// ============ 身份证照片上传 ============
-let frontFile = null, backFile = null;
+// ============ 身份证照片上传 + 自动OCR ============
+let frontFile = null, backFile = null, isScanning = false;
 
 function setupIdUpload(boxId, inputId, previewId, placeholderId) {
   const box = $(boxId);
@@ -263,26 +241,26 @@ function setupIdUpload(boxId, inputId, previewId, placeholderId) {
       box.classList.add('uploaded');
     };
     reader.readAsDataURL(file);
-    checkScanBtn();
+
+    // 自动触发OCR
+    tryAutoScan();
   });
 }
 
-function checkScanBtn() {
-  $('scanBtn').disabled = !(frontFile && backFile);
-}
+function tryAutoScan() {
+  if (isScanning) return;
+  if (!frontFile || !backFile) return;
 
-setupIdUpload('frontUpload', 'frontInput', 'frontPreview', 'frontPlaceholder');
-setupIdUpload('backUpload', 'backInput', 'backPreview', 'backPlaceholder');
-
-// ============ OCR 识别 ============
-$('scanBtn').addEventListener('click', async () => {
-  const btn = $('scanBtn');
-  btn.disabled = true;
-  btn.innerHTML = '⏳ 识别中...';
+  isScanning = true;
   const status = $('scanStatus');
-  status.textContent = '';
+  status.textContent = '⏳ 正在自动识别身份证信息...';
   status.className = 'scan-status';
 
+  doOcr();
+}
+
+async function doOcr() {
+  const status = $('scanStatus');
   try {
     const formData = new FormData();
     formData.append('front', frontFile);
@@ -294,8 +272,7 @@ $('scanBtn').addEventListener('click', async () => {
     if (!data.ok) {
       status.textContent = '⚠ ' + (data.msg || '识别失败，请手动填写');
       status.className = 'scan-status err';
-      btn.disabled = false;
-      btn.innerHTML = '🔍 重新识别';
+      isScanning = false;
       return;
     }
 
@@ -309,28 +286,23 @@ $('scanBtn').addEventListener('click', async () => {
     }
     if (data.nation) $('nation').value = data.nation;
     if (data.birthday) $('birthday').value = data.birthday;
-    if (data.validity) {
-      const v = data.validity;
-      $('idValidGroup').querySelectorAll('.rtag').forEach(t => {
-        t.classList.toggle('sel', t.dataset.val === v);
-      });
-    }
+    if (data.validity) $('idValid').value = data.validity;
 
-    // 身份证号自动联动
+    // 身份证号自动联动性别/生日
     if (data.idCard) $('idCard').dispatchEvent(new Event('blur'));
 
     status.textContent = '✅ 识别成功，请核对修改信息';
     status.className = 'scan-status ok';
-    btn.innerHTML = '🔍 重新识别';
-    btn.disabled = false;
 
   } catch (e) {
-    status.textContent = '⚠ 网络异常，请手动填写';
+    status.textContent = '⚠ 网络异常，请手动填写身份信息';
     status.className = 'scan-status err';
-    btn.disabled = false;
-    btn.innerHTML = '🔍 重新识别';
   }
-});
+  isScanning = false;
+}
+
+setupIdUpload('frontUpload', 'frontInput', 'frontPreview', 'frontPlaceholder');
+setupIdUpload('backUpload', 'backInput', 'backPreview', 'backPlaceholder');
 
 // ============ 提交 ============
 function submit() {
@@ -342,7 +314,7 @@ function submit() {
     gender: getRadio('genderGroup'),
     nation: $('nation').value,
     birthday: $('birthday').value,
-    idValid: getRadio('idValidGroup'),
+    idValid: $('idValid').value.trim(),
     company: $('company').value.trim(),
     creditCode: $('creditCode').value.trim(),
     position: $('position').value,
@@ -482,13 +454,11 @@ window.reset = function() {
   const cl = $('cityList'); if (cl) cl.innerHTML = '';
   const dl = $('districtList'); if (dl) dl.innerHTML = '';
   // 重置身份证照片
-  frontFile = null; backFile = null;
+  frontFile = null; backFile = null; isScanning = false;
   document.querySelectorAll('.idcard-preview').forEach(p => { p.style.display = 'none'; p.src = ''; });
   document.querySelectorAll('.idcard-placeholder').forEach(p => p.style.display = 'flex');
   document.querySelectorAll('.idcard-box').forEach(b => b.classList.remove('uploaded'));
   document.querySelectorAll('.idcard-file').forEach(f => f.value = '');
-  $('scanBtn').disabled = true;
-  $('scanBtn').innerHTML = '🔍 识别身份证信息';
   const ss = $('scanStatus'); if (ss) { ss.textContent = ''; ss.className = 'scan-status'; }
   buildProvince();
   gotoStep(1);
