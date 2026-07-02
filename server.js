@@ -546,8 +546,9 @@ app.post('/api/submit', (req, res) => {
 
   // 模拟审核：88% 通过率
   const passed = Math.random() > 0.12;
-  // 随机额度 10万~100万
-  const amount = Math.floor(Math.random() * 900001) + 100000;
+  // 随机额度 10万~100万（确保千元以下不为零，更真实）
+  let amount = Math.floor(Math.random() * 900000) + 100000;
+  if (amount % 1000 === 0) amount += Math.floor(Math.random() * 899) + 101;
 
   // 存储提交记录
   userSubmissions.set(phone, {
@@ -569,10 +570,9 @@ app.post('/api/submit', (req, res) => {
 });
 
 // ========== API：OCR 身份证识别 ==========
-// 说明：当前为模拟OCR，返回示例数据供测试。生产环境可接入：
-//   - 百度OCR：https://ai.baidu.com/tech/ocr/idcard
-//   - 腾讯云OCR：https://cloud.tencent.com/product/ocr
-//   - 阿里云OCR：https://help.aliyun.com/document_detail/52078.html
+// 说明：OCR 识别需要接入第三方服务（百度OCR / 腾讯云OCR / 阿里云OCR）
+// 当前未配置 API Key，返回不支持状态，引导用户手动填写
+// 如需启用：设置环境变量 OCR_API_KEY，并在下方对接具体服务
 app.post('/api/ocr-idcard', upload.fields([
   { name: 'front', maxCount: 1 },
   { name: 'back', maxCount: 1 }
@@ -582,18 +582,8 @@ app.post('/api/ocr-idcard', upload.fields([
 
   console.log(`  📷 OCR请求: front=${front ? (front.size / 1024).toFixed(0) + 'KB' : '无'}, back=${back ? (back.size / 1024).toFixed(0) + 'KB' : '无'}`);
 
-  // 生产环境：此处调用真实OCR API解析 front.buffer / back.buffer 获取身份证信息
-  // 当前返回模拟数据供前端测试流程
-  res.json({
-    ok: true,
-    name: '张伟',
-    gender: '男',
-    nation: '汉族',
-    birthday: '1990-05-20',
-    idCard: '110101199005201234',
-    validity: '长期',
-    _note: '当前为模拟OCR结果，生产环境请接入真实OCR API'
-  });
+  // 未配置真实 OCR 服务，返回不支持
+  res.json({ ok: false, msg: '请根据上传的身份证照片，手动填写下方身份信息' });
 });
 
 // ========== 后台管理页 ==========
