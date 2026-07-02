@@ -11,26 +11,46 @@
       font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;
       -webkit-tap-highlight-color:transparent;
       -webkit-text-size-adjust:100%;
-      background:#F2F3F7;
+      background:#F5F6FA;
       color:#333;
       display:flex;flex-direction:column;
       min-height:100vh;
       min-height:100dvh;
-      padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
     }
 
-    /* ===== 蓝色头部 ===== */
+    /* ===== 头部 ===== */
     .head{
-      background:linear-gradient(180deg,#2563EB,#1D4ED8);
-      padding:24px 16px 48px;
-      text-align:center;
+      background:linear-gradient(160deg,#3B82F6,#2563EB 40%,#1D4ED8);
+      padding:28px 20px 56px;
       color:#fff;
       flex-shrink:0;
+      position:relative;
+      overflow:hidden;
     }
-    .head .greeting{font-size:18px;font-weight:700;margin-bottom:4px}
-    .head .phone-display{font-size:13px;opacity:.75;margin-top:4px}
+    /* 头部背景光晕 */
+    .head::before{
+      content:'';position:absolute;
+      top:-60px;right:-40px;
+      width:180px;height:180px;
+      background:radial-gradient(circle,rgba(255,255,255,.12) 0%,transparent 70%);
+      border-radius:50%
+    }
+    .head::after{
+      content:'';position:absolute;
+      bottom:-30px;left:-50px;
+      width:200px;height:200px;
+      background:radial-gradient(circle,rgba(255,255,255,.06) 0%,transparent 70%);
+      border-radius:50%
+    }
+    .head-inner{position:relative;z-index:1}
+    .head .greeting{font-size:22px;font-weight:700;margin-bottom:2px}
+    .head .subtitle{font-size:13px;opacity:.7;margin-bottom:6px}
+    .head .phone-display{
+      display:inline-block;font-size:12px;opacity:.6;
+      background:rgba(255,255,255,.12);padding:3px 12px;border-radius:12px
+    }
 
-    /* ===== 内容主区 ===== */
+    /* ===== 主内容 ===== */
     .main{
       flex:1;
       padding:0 16px 16px;
@@ -38,86 +58,115 @@
       position:relative;z-index:2;
       width:100%;
       max-width:480px;
-      margin-left:auto;
-      margin-right:auto;
+      margin-left:auto;margin-right:auto;
     }
 
     /* ===== 额度卡片 ===== */
     .amount-card{
-      background:#fff;border-radius:16px;
-      padding:24px 18px 22px;text-align:center;
-      box-shadow:0 6px 24px rgba(0,0,0,.1);
-      margin-bottom:14px;
+      background:#fff;
+      border-radius:20px;
+      padding:28px 20px 24px;
+      text-align:center;
+      box-shadow:0 8px 30px rgba(37,99,235,.1);
+      margin-bottom:16px;
+      position:relative;
     }
+    /* 卡片顶部装饰线 */
+    .amount-card::before{
+      content:'';
+      position:absolute;top:0;left:50%;transform:translateX(-50%);
+      width:50px;height:4px;
+      background:linear-gradient(90deg,#3B82F6,#8B5CF6);
+      border-radius:0 0 4px 4px
+    }
+
     .amount-label{
-      font-size:14px;color:#888;font-weight:600;
-      margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:6px
+      font-size:13px;color:#999;font-weight:500;
+      margin-bottom:12px;letter-spacing:1px
     }
-    .amount-label .dia{font-size:10px;color:#ccc}
-    .amount-wrap{
-      display:inline-flex;align-items:baseline;justify-content:center;
-      margin-bottom:10px;max-width:100%;flex-wrap:wrap
+    .amount-value{
+      display:flex;align-items:baseline;justify-content:center;
+      margin-bottom:6px
+    }
+    .amount-symbol{
+      font-size:28px;font-weight:600;color:#2563EB;
+      margin-right:2px;line-height:1
     }
     .amount-num{
-      font-size:clamp(36px,11vw,52px);font-weight:800;color:#1a1a1a;
-      letter-spacing:1px;line-height:1.1;
-      font-variant-numeric:tabular-nums;
-      word-break:break-all
+      font-size:clamp(40px,12vw,56px);font-weight:800;color:#111827;
+      letter-spacing:0;line-height:1;
+      font-variant-numeric:tabular-nums
     }
-    .amount-unit{font-size:16px;font-weight:400;color:#999;margin-left:4px}
+    .amount-unit{
+      font-size:16px;font-weight:400;color:#999;margin-left:4px
+    }
 
     .amount-status{
       display:inline-flex;align-items:center;gap:4px;
       padding:4px 12px;border-radius:12px;
-      font-size:12px;font-weight:600;margin-bottom:18px;
+      font-size:12px;font-weight:600;margin:10px 0 20px;
     }
-    .amount-status.approved{background:#D1FAE5;color:#059669}
     .amount-status.pending{background:#FFF5E6;color:#F97316}
+    .amount-status.rejected{background:#FEE2E2;color:#DC2626}
 
     .amount-btn{
       width:100%;height:50px;border-radius:25px;
-      background:linear-gradient(135deg,#2563EB,#1D4ED8);
+      background:linear-gradient(135deg,#3B82F6,#2563EB);
       color:#fff;font-size:17px;font-weight:700;cursor:pointer;border:none;
-      box-shadow:0 4px 14px rgba(37,99,235,.32);
+      box-shadow:0 6px 20px rgba(37,99,235,.3);
       transition:all .2s
     }
-    .amount-btn:active{opacity:.88;transform:scale(.97)}
+    .amount-btn:active{opacity:.9;transform:scale(.97)}
 
     .rate-info{
-      margin-top:12px;font-size:12px;color:#999
+      margin-top:14px;font-size:12px;color:#999
     }
-    .rate-info b{color:#FF5722;font-weight:700}
+    .rate-info .val{color:#F97316;font-weight:700}
     .rate-tag{
-      display:inline-block;background:linear-gradient(135deg,#FF5722,#FF7043);
-      color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;
+      display:inline-block;background:linear-gradient(135deg,#F97316,#F59E0B);
+      color:#fff;font-size:10px;padding:2px 7px;border-radius:8px;margin-left:4px;
       vertical-align:middle;font-weight:600
     }
+
+    /* ===== 特性栏 ===== */
+    .features{
+      display:flex;gap:10px;margin-bottom:16px
+    }
+    .feat-item{
+      flex:1;background:#fff;border-radius:14px;
+      padding:16px 10px;text-align:center;
+      box-shadow:0 2px 10px rgba(0,0,0,.03)
+    }
+    .feat-icon{font-size:24px;display:block;margin-bottom:6px}
+    .feat-label{font-size:11px;color:#999;font-weight:500}
+    .feat-val{font-size:13px;color:#333;font-weight:700;margin-top:2px}
 
     /* ===== 用户信息卡片 ===== */
     .info-card{
       background:#fff;border-radius:14px;
-      margin-bottom:14px;padding:18px;
-      box-shadow:0 2px 10px rgba(0,0,0,.04);
+      margin-bottom:16px;padding:18px;
+      box-shadow:0 2px 10px rgba(0,0,0,.03);
     }
-    .info-card .info-title{font-size:15px;font-weight:700;margin-bottom:12px;color:#333}
-    .info-row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px}
+    .info-card .info-title{font-size:14px;font-weight:700;margin-bottom:12px;color:#333}
+    .info-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px}
     .info-row .k{color:#999;flex-shrink:0}
     .info-row .v{color:#333;font-weight:500;max-width:60%;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .info-divider{height:1px;background:#f0f0f0;margin:4px 0}
+    .info-divider{height:1px;background:#F3F4F6}
 
     /* ===== 提示区域 ===== */
     .tips{
-      margin-bottom:14px;
-      background:linear-gradient(135deg,#EFF6FF,#DBEAFE);
-      border-radius:12px;padding:14px;font-size:13px;color:#1E40AF;
+      margin-bottom:16px;
+      background:#EEF2FF;border-radius:12px;
+      padding:12px 14px;font-size:12px;color:#4F46E5;
       display:flex;align-items:flex-start;gap:8px;line-height:1.5;
     }
-    .tips-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+    .tips-icon{font-size:15px;flex-shrink:0;margin-top:1px}
 
     /* ===== 底部 ===== */
     .footer{
-      text-align:center;padding:10px 0 calc(24px + env(safe-area-inset-bottom));
-      font-size:12px;color:#bbb;flex-shrink:0
+      text-align:center;
+      padding:8px 0 calc(20px + env(safe-area-inset-bottom));
+      font-size:11px;color:#ccc;flex-shrink:0
     }
 
     /* Toast */
@@ -132,20 +181,39 @@
 </head>
 <body>
 
-  <!-- Toast -->
   <div class="toast" id="toast"></div>
 
-  <!-- 蓝色头部 -->
+  <!-- 头部 -->
   <div class="head">
-    <div class="greeting" id="greeting">👋 欢迎回来</div>
-    <div class="phone-display" id="phoneShow"></div>
+    <div class="head-inner">
+      <div class="greeting" id="greeting">👋 欢迎回来</div>
+      <div class="subtitle">月月贷 · 让借贷更简单</div>
+      <div class="phone-display" id="phoneShow"></div>
+    </div>
   </div>
 
   <!-- 主内容 -->
   <div class="main">
     <!-- 额度卡片 -->
-    <div class="amount-card" id="amountCard">
-      <!-- 由 JS 动态渲染 -->
+    <div class="amount-card" id="amountCard"></div>
+
+    <!-- 特性栏 -->
+    <div class="features">
+      <div class="feat-item">
+        <span class="feat-icon">⚡</span>
+        <span class="feat-label">智能审批</span>
+        <span class="feat-val">最快30秒</span>
+      </div>
+      <div class="feat-item">
+        <span class="feat-icon">💰</span>
+        <span class="feat-label">最高额度</span>
+        <span class="feat-val">100万元</span>
+      </div>
+      <div class="feat-item">
+        <span class="feat-icon">🔒</span>
+        <span class="feat-label">银行级加密</span>
+        <span class="feat-val">信息保密</span>
+      </div>
     </div>
 
     <!-- 用户信息 -->
@@ -161,7 +229,7 @@
     </div>
   </div>
 
-  <div class="footer">月月贷 · 让借贷更简单</div>
+  <div class="footer">月月贷 版权所有 © 2026</div>
 
 <script src="home.js"></script>
 </body>

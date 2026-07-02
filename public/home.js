@@ -65,37 +65,42 @@ function renderPage(data) {
   if (hasSubmitted && approved) {
     // 已提交且审核通过 → 显示上次测试的额度
     card.innerHTML = `
-      <div class="amount-label"><span class="dia">&#9671;</span> 你的可借额度（元）<span class="dia">&#9671;</span></div>
-      <div class="amount-wrap">
-        <span class="amount-num">${amount.toLocaleString()}</span><span class="amount-unit">元</span>
+      <div class="amount-label">你的可借额度（元）</div>
+      <div class="amount-value">
+        <span class="amount-symbol">¥</span>
+        <span class="amount-num">${amount.toLocaleString()}</span>
+        <span class="amount-unit">元</span>
       </div>
       <button class="amount-btn" onclick="goTest()">重新测试额度</button>
-      <div class="rate-info">年化利率(单利) <b>7.2%</b>~<b>18%</b><span class="rate-tag">限时优惠</span></div>
+      <div class="rate-info">年化利率(单利) <span class="val">7.2%</span>~<span class="val">18%</span><span class="rate-tag">限时优惠</span></div>
     `;
-    // 更新提示
     $('tipsText').textContent = '额度有效期30天，到期后可重新测试。';
   } else if (hasSubmitted && !approved) {
     // 已提交但未通过 → 显示最高额度，可重新测试
     card.innerHTML = `
-      <div class="amount-label"><span class="dia">&#9671;</span> 最高可借额度（元）<span class="dia">&#9671;</span></div>
-      <div class="amount-wrap">
-        <span class="amount-num">1,000,000</span><span class="amount-unit">元</span>
+      <div class="amount-label">最高可借额度（元）</div>
+      <div class="amount-value">
+        <span class="amount-symbol">¥</span>
+        <span class="amount-num">1,000,000</span>
+        <span class="amount-unit">元</span>
       </div>
-      <div class="amount-status pending">⏳ 上次未通过审核</div>
+      <div class="amount-status rejected">上次未通过审核</div>
       <button class="amount-btn" onclick="goTest()">重新测试额度</button>
-      <div class="rate-info">年化利率(单利) <b>7.2%</b>~<b>18%</b><span class="rate-tag">限时优惠</span></div>
+      <div class="rate-info">年化利率(单利) <span class="val">7.2%</span>~<span class="val">18%</span><span class="rate-tag">限时优惠</span></div>
     `;
     $('tipsText').textContent = '请核对资料后重新提交测试。';
   } else {
     // 未提交过资料 → 显示最高额度，引导测试
     card.innerHTML = `
-      <div class="amount-label"><span class="dia">&#9671;</span> 最高可借额度（元）<span class="dia">&#9671;</span></div>
-      <div class="amount-wrap">
-        <span class="amount-num">1,000,000</span><span class="amount-unit">元</span>
+      <div class="amount-label">最高可借额度（元）</div>
+      <div class="amount-value">
+        <span class="amount-symbol">¥</span>
+        <span class="amount-num">1,000,000</span>
+        <span class="amount-unit">元</span>
       </div>
-      <div class="amount-status pending">📝 填写资料获取专属额度</div>
+      <div class="amount-status pending">填写资料获取专属额度</div>
       <button class="amount-btn" onclick="goTest()">测试额度</button>
-      <div class="rate-info">年化利率(单利) <b>7.2%</b>~<b>18%</b><span class="rate-tag">限时优惠</span></div>
+      <div class="rate-info">年化利率(单利) <span class="val">7.2%</span>~<span class="val">18%</span><span class="rate-tag">限时优惠</span></div>
     `;
     $('tipsText').textContent = '填写完整资料可获得更高额度评估。';
   }
