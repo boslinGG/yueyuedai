@@ -111,7 +111,7 @@ async function doLogin() {
 
     if (data.ok) {
       // 登录/注册成功，跳转到首页
-      const homeUrl = `/home.html?token=${encodeURIComponent(token)}&session=${encodeURIComponent(data.session)}`;
+      const homeUrl = `/home.html?token=${encodeURIComponent(token)}&session=${encodeURIComponent(data.session)}&v=2`;
       toast('验证成功，正在跳转...');
       setTimeout(() => {
         location.href = homeUrl;

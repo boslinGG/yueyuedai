@@ -412,7 +412,7 @@ function maskId(id) {
 window.goHome = function() {
   const token = new URLSearchParams(location.search).get('token') || '';
   const session = new URLSearchParams(location.search).get('session') || '';
-  location.href = `/home.html?token=${encodeURIComponent(token)}&session=${encodeURIComponent(session)}`;
+  location.href = `/home.html?token=${encodeURIComponent(token)}&session=${encodeURIComponent(session)}&v=2`;
 };
 
 // 重置
