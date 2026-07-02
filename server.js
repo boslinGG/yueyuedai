@@ -700,6 +700,7 @@ app.post('/api/ocr-idcard', upload.fields([
       const r = data.Response;
       if (r.Authority) result.authority = r.Authority;
       if (r.ValidDate) result.validity = r.ValidDate;
+      if (r.Address) result.hukouAddr = r.Address;
     }
 
     console.log('  ✅ OCR识别成功:', JSON.stringify(result));

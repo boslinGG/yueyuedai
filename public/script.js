@@ -320,6 +320,8 @@ function fillFormFromOcr(data) {
   if (data.nation) $('nation').value = data.nation;
   if (data.birthday) $('birthday').value = data.birthday;
   if (data.validity) $('idValid').value = data.validity;
+  if (data.authority) $('idAuth').value = data.authority;
+  if (data.hukouAddr) $('hukouAddr').value = data.hukouAddr;
   if (data.idCard) $('idCard').dispatchEvent(new Event('blur'));
 }
 
