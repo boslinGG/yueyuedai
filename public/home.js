@@ -69,7 +69,6 @@ function renderPage(data) {
       <div class="amount-wrap">
         <span class="amount-num">${amount.toLocaleString()}</span><span class="amount-unit">元</span>
       </div>
-      <div class="amount-status approved">✅ 审核已通过</div>
       <button class="amount-btn" onclick="goTest()">重新测试额度</button>
       <div class="rate-info">年化利率(单利) <b>7.2%</b>~<b>18%</b><span class="rate-tag">限时优惠</span></div>
     `;
