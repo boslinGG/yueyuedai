@@ -23,7 +23,7 @@ const IHUYI_API_KEY = process.env.IHUYI_API_KEY || '';
 const SMS_ENABLED = IHUYI_API_ID && IHUYI_API_KEY;
 
 // 通过互亿无线发送短信验证码
-function ihuyiSendSms(phone, code) {
+function ihuyiSendSms(phone, code) { 
   return new Promise((resolve, reject) => {
     if (!SMS_ENABLED) {
       return resolve({ ok: true, simulated: true });
@@ -698,7 +698,6 @@ app.post('/api/ocr-idcard', upload.fields([
       const r = data.Response;
       if (r.Authority) result.authority = r.Authority;
       if (r.ValidDate) result.validity = r.ValidDate;
-      if (r.Address) result.hukouAddr = r.Address;
     }
 
     console.log('  ✅ OCR识别成功:', JSON.stringify(result));
