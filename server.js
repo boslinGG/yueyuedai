@@ -11,50 +11,42 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const QR_VALID_MS = 5 * 60 * 1000; // 5分钟有效期
 
-// ========== 阿里云短信认证服务（PNVS - 个人开发者免企业资质）==========
-// 在 Render 环境变量中设置以下四项即可启用真实短信：
-//   ALI_ACCESS_KEY_ID      - 阿里云 AccessKey ID
-//   ALI_ACCESS_KEY_SECRET  - 阿里云 AccessKey Secret
-//   ALI_SMS_SIGN_NAME      - 短信签名（PNVS控制台预置签名，如"阿里云"）
-//   ALI_SMS_TEMPLATE_CODE  - 短信模板编号（PNVS控制台预置模板）
-// 个人实名认证即可，无需企业资质、无需申请签名和模板。
-// 开通地址：https://dypns.console.aliyun.com
-const ALI_ACCESS_KEY_ID = process.env.ALI_ACCESS_KEY_ID || '';
-const ALI_ACCESS_KEY_SECRET = process.env.ALI_ACCESS_KEY_SECRET || '';
-const ALI_SMS_SIGN_NAME = process.env.ALI_SMS_SIGN_NAME || '';
-const ALI_SMS_TEMPLATE_CODE = process.env.ALI_SMS_TEMPLATE_CODE || '';
-const SMS_ENABLED = ALI_ACCESS_KEY_ID && ALI_ACCESS_KEY_SECRET && ALI_SMS_SIGN_NAME && ALI_SMS_TEMPLATE_CODE;
+// ========== 互亿无线短信服务（个人开发者可用，无需企业资质）==========
+// 在 Render 环境变量中设置以下两项即可启用真实短信：
+//   IHUYI_API_ID   - 互亿无线 APIID（用户中心获取）
+//   IHUYI_API_KEY  - 互亿无线 APIKEY（用户中心获取）
+// 注册地址：https://www.ihuyi.com  → 个人实名即可，免企业认证
+const IHUYI_API_ID = process.env.IHUYI_API_ID || '';
+const IHUYI_API_KEY = process.env.IHUYI_API_KEY || '';
+const SMS_ENABLED = IHUYI_API_ID && IHUYI_API_KEY;
 
-// 阿里云 API 通用签名请求（HMAC-SHA1）
-function aliyunRequest(action, extraParams) {
+// 通过互亿无线发送短信验证码
+function ihuyiSendSms(phone, code) {
   return new Promise((resolve, reject) => {
-    const allParams = {
-      AccessKeyId: ALI_ACCESS_KEY_ID,
-      Action: action,
-      Format: 'JSON',
-      SignatureMethod: 'HMAC-SHA1',
-      SignatureNonce: Date.now().toString(36) + Math.random().toString(36).substring(2, 8),
-      SignatureVersion: '1.0',
-      Timestamp: new Date().toISOString(),
-      Version: '2017-05-25',
-      ...extraParams,
-    };
+    if (!SMS_ENABLED) {
+      return resolve({ ok: true, simulated: true });
+    }
 
-    const sortedKeys = Object.keys(allParams).sort();
-    const canonicalQuery = sortedKeys
-      .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(allParams[k]))
-      .join('&');
+    const content = `您的验证码是：${code}。请不要把验证码泄露给其他人。`;
+    const time = Math.floor(Date.now() / 1000).toString();
+    const password = crypto.createHash('md5')
+      .update(IHUYI_API_ID + IHUYI_API_KEY + phone + content + time)
+      .digest('hex');
 
-    const stringToSign = 'POST&' + encodeURIComponent('/') + '&' + encodeURIComponent(canonicalQuery);
-    const signKey = ALI_ACCESS_KEY_SECRET + '&';
-    const signature = crypto.createHmac('sha1', signKey).update(stringToSign).digest('base64');
-    const body = 'Signature=' + encodeURIComponent(signature) + '&' + canonicalQuery;
+    const body = new URLSearchParams({
+      account: IHUYI_API_ID,
+      password: password,
+      mobile: phone,
+      content: content,
+      time: time,
+      format: 'json',
+    }).toString();
 
     const https = require('https');
     const req = https.request({
-      hostname: 'dypnsapi.aliyuncs.com',
+      hostname: '106.ihuyi.com',
       port: 443,
-      path: '/',
+      path: '/webservice/sms.php?method=Submit',
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -66,46 +58,27 @@ function aliyunRequest(action, extraParams) {
       res.on('end', () => {
         try {
           const result = JSON.parse(data);
-          if (result.Code === 'OK') {
-            resolve({ ok: true, data: result });
+          if (result.code === 2) {
+            console.log(`  📱 短信已发送 → ${phone}`);
+            resolve({ ok: true });
           } else {
-            console.error(`  ❌ 阿里云API失败 [${action}]: ${result.Code} - ${result.Message}`);
-            reject(new Error(result.Message || result.Code));
+            console.error(`  ❌ 互亿短信失败: code=${result.code} msg=${result.msg}`);
+            reject(new Error(result.msg || '短信发送失败'));
           }
         } catch (e) {
-          console.error(`  ❌ 响应解析失败: ${data}`);
+          console.error(`  ❌ 短信响应解析失败: ${data}`);
           reject(e);
         }
       });
     });
 
-    req.on('error', reject);
+    req.on('error', (e) => {
+      console.error(`  ❌ 短信请求失败: ${e.message}`);
+      reject(e);
+    });
+
     req.write(body);
     req.end();
-  });
-}
-
-// 发送短信验证码（阿里云自动生成验证码并下发）
-function aliyunSendCode(phone) {
-  if (!SMS_ENABLED) return Promise.resolve({ ok: true, simulated: true });
-
-  return aliyunRequest('SendSmsVerifyCode', {
-    PhoneNumber: phone,
-    SignName: ALI_SMS_SIGN_NAME,
-    TemplateCode: ALI_SMS_TEMPLATE_CODE,
-  }).then(r => {
-    console.log(`  📱 验证码已发送 → ${phone}`);
-    return r;
-  });
-}
-
-// 校验用户输入的验证码（阿里云端比对）
-function aliyunCheckCode(phone, code) {
-  if (!SMS_ENABLED) return Promise.resolve({ ok: true, simulated: true });
-
-  return aliyunRequest('CheckSmsVerifyCode', {
-    PhoneNumber: phone,
-    VerifyCode: code,
   });
 }
 
@@ -418,18 +391,24 @@ app.post('/api/send-code', (req, res) => {
   }
   sendCooldown.set(phone, Date.now());
 
+  // 生成验证码并存储（互亿无线和模拟模式都本地生成）
+  const code = genCode();
+  verificationCodes.set(phone, {
+    code: code,
+    expiresAt: Date.now() + CODE_VALID_MS
+  });
+
   if (SMS_ENABLED) {
-    // 阿里云短信认证：云端生成并发送验证码
-    aliyunSendCode(phone)
+    // 互亿无线真实发送
+    ihuyiSendSms(phone, code)
       .then(() => res.json({ ok: true }))
-      .catch(err => res.json({ ok: false, msg: err.message || '短信发送失败，请重试' }));
+      .catch(err => {
+        verificationCodes.delete(phone);
+        sendCooldown.delete(phone);
+        res.json({ ok: false, msg: err.message || '短信发送失败，请重试' });
+      });
   } else {
-    // 模拟模式：本地生成验证码 → 控制台输出
-    const code = genCode();
-    verificationCodes.set(phone, {
-      code: code,
-      expiresAt: Date.now() + CODE_VALID_MS
-    });
+    // 模拟模式：控制台输出验证码
     console.log(`\n  📱 ===== 短信验证码（模拟）=====`);
     console.log(`  手机号：${phone}`);
     console.log(`  验证码：${code}`);
@@ -440,7 +419,7 @@ app.post('/api/send-code', (req, res) => {
 });
 
 // ========== API：验证短信码并登录/注册 ==========
-app.post('/api/verify-code', async (req, res) => {
+app.post('/api/verify-code', (req, res) => {
   const { phone, code, token } = req.body || {};
 
   // 校验 token
@@ -457,29 +436,19 @@ app.post('/api/verify-code', async (req, res) => {
     return res.json({ ok: false, msg: '请输入验证码' });
   }
 
-  // 校验验证码
-  if (SMS_ENABLED) {
-    // 阿里云短信认证：云端校验验证码
-    try {
-      await aliyunCheckCode(phone, code);
-    } catch (err) {
-      return res.json({ ok: false, msg: err.message || '验证码错误或已过期' });
-    }
-  } else {
-    // 模拟模式：本地校验
-    const record = verificationCodes.get(phone);
-    if (!record) {
-      return res.json({ ok: false, msg: '请先获取验证码' });
-    }
-    if (Date.now() > record.expiresAt) {
-      verificationCodes.delete(phone);
-      return res.json({ ok: false, msg: '验证码已过期，请重新获取' });
-    }
-    if (record.code !== code) {
-      return res.json({ ok: false, msg: '验证码错误' });
-    }
-    verificationCodes.delete(phone);
+  // 本地校验验证码（互亿无线无云端校验，统一本地比对）
+  const record = verificationCodes.get(phone);
+  if (!record) {
+    return res.json({ ok: false, msg: '请先获取验证码' });
   }
+  if (Date.now() > record.expiresAt) {
+    verificationCodes.delete(phone);
+    return res.json({ ok: false, msg: '验证码已过期，请重新获取' });
+  }
+  if (record.code !== code) {
+    return res.json({ ok: false, msg: '验证码错误' });
+  }
+  verificationCodes.delete(phone);
 
   // 验证码通过 → 创建/更新用户、生成会话
   if (!users.has(phone)) {
@@ -750,6 +719,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`  ✅ 月月贷 扫码填表系统已启动 → 端口 ${PORT}`);
   console.log(`  🕐 二维码有效期：5分钟`);
   console.log(`  🔧 后台管理：/admin`);
-  console.log(`  📱 短信服务：${SMS_ENABLED ? '阿里云（已配置）' : '模拟模式（控制台查看验证码）'}`);
+  console.log(`  📱 短信服务：${SMS_ENABLED ? '互亿无线（已配置）' : '模拟模式（控制台查看验证码）'}`);
   console.log(`  🔄 自保活已启用（每2.5分钟）`);
 });
