@@ -292,7 +292,7 @@ async function doOcr() {
 
     // 服务端未配置百度OCR
     if (data.code === 'NO_CONFIG') {
-      status.textContent = '⚠ 管理员未配置OCR服务，请手动填写（管理员可设置百度OCR环境变量）';
+      status.textContent = '⚠ 管理员未配置OCR服务，请手动填写（管理员可设置腾讯云OCR环境变量）';
       status.className = 'scan-status err';
       isScanning = false;
       return;
