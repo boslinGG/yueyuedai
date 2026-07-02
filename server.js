@@ -519,7 +519,7 @@ app.get('/api/user-limit', (req, res) => {
     ok: true,
     phone: phone,
     hasSubmitted: hasSubmitted,
-    amount: hasSubmitted ? submission.amount : 1000000,
+    amount: hasSubmitted ? submission.amount : 100,
     approved: hasSubmitted ? submission.approved : false,
     info: hasSubmitted ? {
       name: submission.data.name,
@@ -546,9 +546,8 @@ app.post('/api/submit', (req, res) => {
 
   // 模拟审核：88% 通过率
   const passed = Math.random() > 0.12;
-  // 随机额度 10万~100万（确保千元以下不为零，更真实）
-  let amount = Math.floor(Math.random() * 900000) + 100000;
-  if (amount % 1000 === 0) amount += Math.floor(Math.random() * 899) + 101;
+  // 随机额度 10万~100万（万元为单位）
+  const amount = Math.floor(Math.random() * 91) + 10;
 
   // 存储提交记录
   userSubmissions.set(phone, {

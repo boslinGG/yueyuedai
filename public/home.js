@@ -65,11 +65,11 @@ function renderPage(data) {
   if (hasSubmitted && approved) {
     // 已提交且审核通过 → 显示上次测试的额度
     card.innerHTML = `
-      <div class="amount-label">你的可借额度（元）</div>
+      <div class="amount-label">你的可借额度（万元）</div>
       <div class="amount-value">
         <span class="amount-symbol">¥</span>
         <span class="amount-num">${amount.toLocaleString()}</span>
-        <span class="amount-unit">元</span>
+        <span class="amount-unit">万元</span>
       </div>
       <button class="amount-btn" onclick="goTest()">重新测试额度</button>
       <div class="rate-info">年化利率(单利) <span class="val">7.2%</span>~<span class="val">18%</span><span class="rate-tag">限时优惠</span></div>
@@ -78,11 +78,11 @@ function renderPage(data) {
   } else if (hasSubmitted && !approved) {
     // 已提交但未通过 → 显示最高额度，可重新测试
     card.innerHTML = `
-      <div class="amount-label">最高可借额度（元）</div>
+      <div class="amount-label">最高可借额度（万元）</div>
       <div class="amount-value">
         <span class="amount-symbol">¥</span>
-        <span class="amount-num">1,000,000</span>
-        <span class="amount-unit">元</span>
+        <span class="amount-num">100</span>
+        <span class="amount-unit">万元</span>
       </div>
       <button class="amount-btn" onclick="goTest()">重新测试额度</button>
       <div class="rate-info">年化利率(单利) <span class="val">7.2%</span>~<span class="val">18%</span><span class="rate-tag">限时优惠</span></div>
@@ -91,11 +91,11 @@ function renderPage(data) {
   } else {
     // 未提交过资料 → 显示最高额度，引导测试
     card.innerHTML = `
-      <div class="amount-label">最高可借额度（元）</div>
+      <div class="amount-label">最高可借额度（万元）</div>
       <div class="amount-value">
         <span class="amount-symbol">¥</span>
-        <span class="amount-num">1,000,000</span>
-        <span class="amount-unit">元</span>
+        <span class="amount-num">100</span>
+        <span class="amount-unit">万元</span>
       </div>
       <div class="amount-status pending">填写资料获取专属额度</div>
       <button class="amount-btn" onclick="goTest()">测试额度</button>
