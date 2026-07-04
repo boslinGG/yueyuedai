@@ -101,17 +101,78 @@ function generateToken() {
 }
 generateToken();
 
+// ========== AES-256-GCM 加密工具 ==========
+// 安全提示：请在 Render 环境变量中设置 DATA_SECRET（64位随机字符串），确保重启后数据可解密
+// 生成方法：node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+const DATA_SECRET = process.env.DATA_SECRET || (() => {
+  const fallback = crypto.randomBytes(32).toString('hex');
+  console.log('  ⚠⚠⚠ 未设置 DATA_SECRET 环境变量 ⚠⚠⚠');
+  console.log('  ⚠ 本次已生成临时密钥，重启后旧加密数据将无法解密！');
+  console.log('  ⚠ 请在 Render 环境变量中设置 DATA_SECRET（固定值）确保数据持久可用');
+  return fallback;
+})();
+const ENC_KEY = crypto.createHash('sha256').update(DATA_SECRET).digest(); // 32 bytes
+const ENC_ALGO = 'aes-256-gcm';
+
+// 加密任意数据对象 → 返回 "iv:authTag:ciphertext" 格式字符串
+function encryptData(obj) {
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv(ENC_ALGO, ENC_KEY, iv);
+  const json = JSON.stringify(obj);
+  let enc = cipher.update(json, 'utf8', 'base64');
+  enc += cipher.final('base64');
+  const authTag = cipher.getAuthTag().toString('base64');
+  return iv.toString('base64') + ':' + authTag + ':' + enc;
+}
+
+// 解密 → 返回原始对象
+function decryptData(encStr) {
+  if (!encStr || typeof encStr !== 'string' || !encStr.includes(':')) {
+    return encStr; // 兼容旧明文数据（如果存在）
+  }
+  const parts = encStr.split(':');
+  if (parts.length !== 3) return encStr;
+  try {
+    const iv = Buffer.from(parts[0], 'base64');
+    const authTag = Buffer.from(parts[1], 'base64');
+    const decipher = crypto.createDecipheriv(ENC_ALGO, ENC_KEY, iv);
+    decipher.setAuthTag(authTag);
+    let dec = decipher.update(parts[2], 'base64', 'utf8');
+    dec += decipher.final('utf8');
+    return JSON.parse(dec);
+  } catch (e) {
+    console.error('⚠ 解密数据失败:', e.message);
+    return null;
+  }
+}
+
+// 手机号哈希 → SHA-256(phone + secret)，不可逆
+const PHONE_SALT = crypto.createHash('sha256').update('ydk_phone_salt_' + DATA_SECRET).digest('hex');
+function phoneKey(phone) {
+  return crypto.createHash('sha256').update(phone + PHONE_SALT).digest('hex');
+}
+
+// 加密手机号（可用于存储）
+function encryptPhone(phone) {
+  return encryptData({ p: phone });
+}
+
+// 解密手机号
+function decryptPhone(encStr) {
+  const obj = decryptData(encStr);
+  return obj && obj.p ? obj.p : '';
+}
+
 // ========== JSON 文件持久化存储 ==========
 const DATA_FILE = path.join(__dirname, 'data.json');
 const AMOUNT_VALID_MS = 30 * 24 * 60 * 60 * 1000; // 额度有效期30天
 
-// 从文件加载数据
+// 从文件加载数据（数据已加密存储，读取后不解密，API 按需解密）
 function loadStore() {
   try {
     if (fs.existsSync(DATA_FILE)) {
       const raw = fs.readFileSync(DATA_FILE, 'utf-8');
       const data = JSON.parse(raw);
-      // 将普通对象还原为 Map
       return {
         users: data.users || {},
         submissions: data.submissions || {}
@@ -138,6 +199,9 @@ function saveStore() {
 // 初始化内存数据库
 const db = loadStore();
 console.log(`  📦 已加载 ${Object.keys(db.users).length} 个用户, ${Object.keys(db.submissions).length} 条提交记录`);
+if (process.env.DATA_SECRET) {
+  console.log('  🔐 数据加密已启用（AES-256-GCM）');
+}
 
 // 验证码 & 会话 & 频率限制（内存，无需持久化）
 const CODE_VALID_MS = 5 * 60 * 1000;   // 验证码5分钟内有效
@@ -527,8 +591,9 @@ app.post('/api/verify-code', (req, res) => {
   verificationCodes.delete(phone);
 
   // 验证码通过 → 创建/更新用户、生成会话
-  if (!db.users[phone]) {
-    db.users[phone] = { phone, createdAt: Date.now() };
+  const pKey = phoneKey(phone);
+  if (!db.users[pKey]) {
+    db.users[pKey] = { phone: encryptPhone(phone), createdAt: Date.now() };
     saveStore();
     console.log(`  👤 新用户注册：${phone}`);
   } else {
@@ -550,8 +615,24 @@ app.get('/api/user-limit', (req, res) => {
 
   const sess = userSessions.get(session);
   const phone = sess.phone;
-  const submission = db.submissions[phone];
+  const pKey = phoneKey(phone);
+  const submission = db.submissions[pKey];
   const hasSubmitted = !!submission;
+
+  // 解密用户资料
+  let infoData = null;
+  if (hasSubmitted) {
+    const rawData = decryptData(submission.data);
+    if (rawData) {
+      infoData = {
+        name: rawData.name,
+        idCard: rawData.idCard,
+        company: rawData.company,
+        position: rawData.position,
+        createdAt: submission.createdAt
+      };
+    }
+  }
 
   // 额度30天有效期校验
   let amountExpired = false;
@@ -569,13 +650,7 @@ app.get('/api/user-limit', (req, res) => {
     approved: hasSubmitted ? submission.approved : false,
     amountExpired: amountExpired,
     expiresAt: expiresAt,
-    info: hasSubmitted ? {
-      name: submission.data.name,
-      idCard: submission.data.idCard,
-      company: submission.data.company,
-      position: submission.data.position,
-      createdAt: submission.createdAt
-    } : null
+    info: infoData
   });
 });
 
@@ -633,10 +708,11 @@ app.post('/api/submit', (req, res) => {
     details.push('公积金基数+5');
   }
 
-  // 存储提交记录
-  db.submissions[phone] = {
-    phone: phone,
-    data: data,
+  // 存储提交记录（敏感数据加密后再持久化）
+  const pKey = phoneKey(phone);
+  db.submissions[pKey] = {
+    phone: encryptPhone(phone),
+    data: encryptData(data),
     approved: passed,
     amount: amount,
     createdAt: Date.now()
@@ -1048,6 +1124,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`  ✅ 月月贷 扫码填表系统已启动 → 端口 ${PORT}`);
   console.log(`  🕐 二维码有效期：5分钟`);
   console.log(`  🔧 后台管理：/admin`);
+  console.log(`  🔐 数据加密：${process.env.DATA_SECRET ? 'AES-256-GCM（已启用）' : '⚠ 临时密钥（请设置 DATA_SECRET 环境变量）'}`);
   console.log(`  📱 短信服务：${SMS_ENABLED ? '互亿无线（已配置）' : '模拟模式（控制台查看验证码）'}`);
   console.log(`  🔄 自保活已启用（每2.5分钟）`);
 });
