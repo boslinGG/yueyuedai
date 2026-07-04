@@ -6,6 +6,7 @@ const express = require('express');
 const QRCode = require('qrcode');
 const crypto = require('crypto');
 const path = require('path');
+const fs = require('fs');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -100,14 +101,50 @@ function generateToken() {
 }
 generateToken();
 
-// ========== 验证码 & 会话 & 用户（内存存储）==========
+// ========== JSON 文件持久化存储 ==========
+const DATA_FILE = path.join(__dirname, 'data.json');
+const AMOUNT_VALID_MS = 30 * 24 * 60 * 60 * 1000; // 额度有效期30天
+
+// 从文件加载数据
+function loadStore() {
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const raw = fs.readFileSync(DATA_FILE, 'utf-8');
+      const data = JSON.parse(raw);
+      // 将普通对象还原为 Map
+      return {
+        users: data.users || {},
+        submissions: data.submissions || {}
+      };
+    }
+  } catch (e) {
+    console.error('⚠ 读取数据文件失败，使用空数据:', e.message);
+  }
+  return { users: {}, submissions: {} };
+}
+
+// 保存数据到文件（原子写入）
+function saveStore() {
+  try {
+    const data = { users: db.users, submissions: db.submissions };
+    const tmp = DATA_FILE + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf-8');
+    fs.renameSync(tmp, DATA_FILE);
+  } catch (e) {
+    console.error('⚠ 保存数据文件失败:', e.message);
+  }
+}
+
+// 初始化内存数据库
+const db = loadStore();
+console.log(`  📦 已加载 ${Object.keys(db.users).length} 个用户, ${Object.keys(db.submissions).length} 条提交记录`);
+
+// 验证码 & 会话 & 频率限制（内存，无需持久化）
 const CODE_VALID_MS = 5 * 60 * 1000;   // 验证码5分钟内有效
 const SESSION_VALID_MS = 30 * 60 * 1000; // 会话30分钟有效
 
 const verificationCodes = new Map();  // phone -> { code, expiresAt }
 const userSessions = new Map();       // sessionId -> { phone, createdAt }
-const users = new Map();              // phone -> { phone, createdAt }  简易用户库
-const userSubmissions = new Map();    // phone -> { phone, data, approved, amount, createdAt }  用户提交记录
 
 // 生成6位随机验证码
 function genCode() {
@@ -490,8 +527,9 @@ app.post('/api/verify-code', (req, res) => {
   verificationCodes.delete(phone);
 
   // 验证码通过 → 创建/更新用户、生成会话
-  if (!users.has(phone)) {
-    users.set(phone, { phone, createdAt: Date.now() });
+  if (!db.users[phone]) {
+    db.users[phone] = { phone, createdAt: Date.now() };
+    saveStore();
     console.log(`  👤 新用户注册：${phone}`);
   } else {
     console.log(`  👤 用户登录：${phone}`);
@@ -512,8 +550,16 @@ app.get('/api/user-limit', (req, res) => {
 
   const sess = userSessions.get(session);
   const phone = sess.phone;
-  const submission = userSubmissions.get(phone);
+  const submission = db.submissions[phone];
   const hasSubmitted = !!submission;
+
+  // 额度30天有效期校验
+  let amountExpired = false;
+  let expiresAt = null;
+  if (hasSubmitted && submission.approved) {
+    expiresAt = submission.createdAt + AMOUNT_VALID_MS;
+    amountExpired = Date.now() > expiresAt;
+  }
 
   res.json({
     ok: true,
@@ -521,6 +567,8 @@ app.get('/api/user-limit', (req, res) => {
     hasSubmitted: hasSubmitted,
     amount: hasSubmitted ? submission.amount : 100,
     approved: hasSubmitted ? submission.approved : false,
+    amountExpired: amountExpired,
+    expiresAt: expiresAt,
     info: hasSubmitted ? {
       name: submission.data.name,
       idCard: submission.data.idCard,
@@ -586,13 +634,14 @@ app.post('/api/submit', (req, res) => {
   }
 
   // 存储提交记录
-  userSubmissions.set(phone, {
+  db.submissions[phone] = {
     phone: phone,
     data: data,
     approved: passed,
     amount: amount,
     createdAt: Date.now()
-  });
+  };
+  saveStore();
 
   console.log(`  📋 ${phone} 提交资料 → ${passed ? '✅ 通过' : '❌ 未通过'} → 额度 ${amount}万元 (${details.join(', ')})`);
 

@@ -43,7 +43,7 @@ async function init() {
 
 // ============ 渲染页面 ============
 function renderPage(data) {
-  const { phone, hasSubmitted, amount, approved, info } = data;
+  const { phone, hasSubmitted, amount, approved, amountExpired, expiresAt, info } = data;
 
   // 显示手机号（脱敏）
   const masked = phone.substring(0, 3) + '****' + phone.slice(-4);
@@ -63,6 +63,11 @@ function renderPage(data) {
   const card = $('amountCard');
 
   if (hasSubmitted && approved) {
+    // 额度是否过期
+    const expiredHtml = amountExpired
+      ? '<div class="amount-expired">⚠ 额度已过期（有效期30天）</div>'
+      : `<div class="amount-expiry">额度有效期至 ${new Date(expiresAt).toLocaleDateString('zh-CN')}</div>`;
+
     // 已提交且审核通过 → 显示上次测试的额度
     card.innerHTML = `
       <div class="amount-label">你的可借额度（元）</div>
@@ -71,10 +76,11 @@ function renderPage(data) {
         <span class="amount-num">${(amount * 10000).toLocaleString()}</span>
         <span class="amount-unit">元</span>
       </div>
-      <button class="amount-btn" onclick="goTest()">重新测试额度</button>
+      ${expiredHtml}
+      <button class="amount-btn" onclick="goTest()">${amountExpired ? '额度已过期，重新评估' : '重新测试额度'}</button>
       <div class="rate-info">年化利率(单利) <span class="val">7.2%</span>~<span class="val">18%</span><span class="rate-tag">限时优惠</span></div>
     `;
-    $('tipsText').textContent = '额度有效期30天，到期后可重新测试。';
+    $('tipsText').textContent = amountExpired ? '额度已超过30天有效期，请重新提交获取。' : '额度有效期30天，到期后可重新测试。';
   } else if (hasSubmitted && !approved) {
     // 已提交但未通过 → 显示最高额度，可重新测试
     card.innerHTML = `
