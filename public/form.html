@@ -105,7 +105,7 @@
   </div>
 
   <div class="nav-btns">
-    <button class="nav-btn next" onclick="nextStep(1)">下一步 →</button>
+    <button class="nav-btn next" onclick="nextStep(1)">下一步</button>
   </div>
 </div>
 
@@ -185,9 +185,18 @@
     </div>
 
     <div class="form-item">
-      <label class="flb"><span class="star">*</span>职位/职务</label>
-      <div class="sel-wrap" id="positionWrap">
-        <input class="finp sel-inp" id="position" placeholder="请选择职位/职务" readonly />
+      <label class="flb"><span class="star">*</span>行业</label>
+      <div class="sel-wrap" id="industryWrap">
+        <input class="finp sel-inp" id="industry" placeholder="选择或输入行业" />
+        <span class="sel-arr">▾</span>
+        <div class="sel-drop" id="industryList"></div>
+      </div>
+    </div>
+
+    <div class="form-item">
+      <label class="flb"><span class="star">*</span>职位</label>
+      <div class="sel-wrap" id="jobWrap">
+        <input class="finp sel-inp" id="position" placeholder="选择或输入职位" />
         <span class="sel-arr">▾</span>
         <div class="sel-drop pos-drop" id="positionList"></div>
       </div>
@@ -209,6 +218,21 @@
     <div class="form-item">
       <label class="flb">单位电话</label>
       <input class="finp" id="companyPhone" placeholder="单位座机（选填）" />
+    </div>
+
+    <div class="form-item">
+      <label class="flb">社保基数</label>
+      <input class="finp" id="socialBase" placeholder="社保缴纳基数（选填）" inputmode="numeric" />
+    </div>
+
+    <div class="form-item">
+      <label class="flb">公积金基数</label>
+      <input class="finp" id="fundBase" placeholder="公积金缴纳基数（选填）" inputmode="numeric" />
+    </div>
+
+    <div class="form-item">
+      <label class="flb">入职年限</label>
+      <input class="finp" id="workYears" placeholder="如：3年（选填）" />
     </div>
   </div>
 
@@ -256,7 +280,7 @@
   </div>
 
   <div class="nav-btns">
-    <button class="nav-btn prev" onclick="prevStep(4)">← 上一步</button>
+    <button class="nav-btn prev" onclick="prevStep(4)">上一步</button>
   </div>
 
   <!-- 提交 -->

@@ -107,7 +107,8 @@ function validateStep2() {
 
 function validateStep3() {
   if (!$('company').value.trim()) { toast('请填写单位全称'); return false; }
-  if (!$('position').value) { toast('请选择职位/职务'); return false; }
+  if (!$('industry').value.trim()) { toast('请选择或输入行业'); return false; }
+  if (!$('position').value.trim()) { toast('请选择或输入职位'); return false; }
   if (!getRadio('incomeGroup')) { toast('请选择税后月收入'); return false; }
   return true;
 }
@@ -137,33 +138,57 @@ const NATIONS = [
 buildDrop('nationList', NATIONS, 'nation', 'nationWrap');
 $('nationWrap').addEventListener('click', (e) => { e.stopPropagation(); $('nationList').classList.toggle('show'); });
 
-// ============ 职位下拉（全面） ============
-const POSITIONS = [
-  '董事长','首席执行官CEO','总裁','副总裁','总经理','副总经理','总监',
-  '部门经理','项目经理','主管','组长','厂长','主任','店长',
-  '高级工程师','软件工程师','硬件工程师','架构师','算法工程师','数据分析师','测试工程师','运维工程师','前端工程师','后端工程师','全栈工程师','Android工程师','iOS工程师',
-  'UI设计师','UX设计师','平面设计师','产品设计师','室内设计师',
-  '产品经理','运营经理','运营专员','产品助理',
-  '财务总监','财务经理','会计','出纳','审计',
-  '人力资源总监','招聘专员','行政经理','行政专员','文员','前台','秘书',
-  '市场总监','市场经理','销售总监','销售经理','销售代表','客户经理','商务专员','品牌经理',
-  '理财顾问','投资经理','保险代理人','风控专员','信贷员','柜员',
-  '主任医师','主治医师','护士长','护士','药剂师',
-  '教授','副教授','讲师','助教','教师','幼师',
-  '律师','法务','法律顾问',
-  '工程师','监理','造价员','施工员','安全员','测量员','材料员',
-  '编辑','记者','摄影师','视频剪辑师','公关专员',
-  '物流经理','快递员','仓管','采购专员','供应链专员',
-  '厨师','服务员','调酒师','理发师','美容师','按摩师',
-  '公务员','事业编制人员','社区工作人员','辅警',
-  '电工','焊工','机修工','操作工','质检员','普工',
-  '货车司机','出租车司机','私家司机','公交车司机',
-  '个体工商户','自由职业者','网店店主','自媒体运营','主播',
-  '农民','养殖户','园丁',
-  '学生','退休','无业','其他'
-];
-buildDrop('positionList', POSITIONS, 'position', 'positionWrap');
-$('positionWrap').addEventListener('click', (e) => { e.stopPropagation(); $('positionList').classList.toggle('show'); });
+// ============ 行业-职位级联下拉（可手动输入） ============
+const INDUSTRY_JOBS = {
+  'IT/互联网': ['软件工程师','硬件工程师','产品经理','UI/UX设计师','测试工程师','运维工程师','数据分析师','项目经理','前端工程师','后端工程师','全栈工程师','AI/算法工程师','架构师','运营','市场','其他'],
+  '金融/保险': ['银行柜员','信贷经理','理财顾问','保险代理人','投资经理','风控专员','会计','审计','基金经理','其他'],
+  '教育/科研': ['教师','教授','讲师','助教','辅导员','幼师','教研员','实验室技术员','其他'],
+  '医疗/制药': ['医生','护士','药剂师','医学检验','医疗管理','医药代表','其他'],
+  '制造业': ['工程师','质检员','生产主管','操作工','技术员','采购','仓管','其他'],
+  '建筑/房地产': ['建筑师','监理','施工员','安全员','造价员','项目经理','销售代表','物业经理','其他'],
+  '餐饮/酒店': ['厨师','服务员','店长','客房经理','调酒师','其他'],
+  '零售/贸易': ['店长','销售','采购','仓管','物流','客服','其他'],
+  '政府/事业单位': ['公务员','事业编制人员','社区工作人员','辅警','其他'],
+  '交通/物流': ['司机','快递员','配送员','物流经理','调度员','其他'],
+  '法律/咨询': ['律师','法务','法律顾问','管理咨询师','其他'],
+  '文化/传媒': ['记者','编辑','摄影师','视频制作','自媒体博主','主播','其他'],
+  '自由职业': ['个体经营者','自由职业者','网店店主','其他'],
+  '其他行业': ['其他']
+};
+const ALL_INDUSTRIES = Object.keys(INDUSTRY_JOBS);
+
+// 行业下拉（可手动输入）
+buildDrop('industryList', ALL_INDUSTRIES, 'industry', 'industryWrap');
+$('industryWrap').addEventListener('click', (e) => { e.stopPropagation(); $('industryList').classList.toggle('show'); });
+$('industry').addEventListener('input', function() {
+  const val = this.value.trim();
+  const items = val ? ALL_INDUSTRIES.filter(i => i.includes(val)) : ALL_INDUSTRIES;
+  buildDrop('industryList', items, 'industry', 'industryWrap');
+  $('industryList').classList.add('show');
+  updatePositionList();
+});
+$('industry').addEventListener('change', updatePositionList);
+
+function updatePositionList() {
+  const ind = $('industry').value.trim();
+  const jobs = INDUSTRY_JOBS[ind] || [];
+  if (jobs.length) {
+    buildDrop('positionList', jobs, 'position', 'jobWrap');
+  } else {
+    $('positionList').innerHTML = '<div class="sel-opt" style="color:#999">请先选择行业</div>';
+  }
+}
+
+// 职位下拉（可手动输入）
+$('jobWrap').addEventListener('click', (e) => { e.stopPropagation(); updatePositionList(); $('positionList').classList.toggle('show'); });
+$('position').addEventListener('input', function() {
+  const ind = $('industry').value.trim();
+  const jobs = (INDUSTRY_JOBS[ind] || []).filter(j => j.includes(this.value.trim()));
+  if (jobs.length) {
+    buildDrop('positionList', jobs, 'position', 'jobWrap');
+    $('positionList').classList.add('show');
+  }
+});
 
 // ============ 身份证号自动填充性别/生日 ============
 $('idCard').addEventListener('blur', function() {
@@ -340,9 +365,13 @@ function submit() {
     idValid: $('idValid').value.trim(),
     company: $('company').value.trim(),
     creditCode: $('creditCode').value.trim(),
-    position: $('position').value,
+    industry: $('industry').value.trim(),
+    position: $('position').value.trim(),
     income: getRadio('incomeGroup'),
     companyPhone: $('companyPhone').value.trim(),
+    socialBase: $('socialBase').value.trim(),
+    fundBase: $('fundBase').value.trim(),
+    workYears: $('workYears').value.trim(),
     province: $('province').value,
     city: $('city').value,
     district: $('district').value,

@@ -525,6 +525,7 @@ app.get('/api/user-limit', (req, res) => {
       name: submission.data.name,
       idCard: submission.data.idCard,
       company: submission.data.company,
+      position: submission.data.position,
       createdAt: submission.createdAt
     } : null
   });
@@ -544,8 +545,8 @@ app.post('/api/submit', (req, res) => {
     return res.json({ ok: false, msg: '提交数据不完整' });
   }
 
-  // 模拟审核：88% 通过率
-  const passed = Math.random() > 0.12;
+  // 模拟审核：99% 通过率
+  const passed = Math.random() > 0.01;
   // 随机额度 10万~100万（万元为单位）
   const amount = Math.floor(Math.random() * 91) + 10;
 

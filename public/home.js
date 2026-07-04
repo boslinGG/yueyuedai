@@ -114,6 +114,7 @@ function renderPage(data) {
       <div class="info-row"><span class="k">身份证号</span><span class="v">${maskId(info.idCard)}</span></div>
       <div class="info-divider"></div>
       <div class="info-row"><span class="k">单位</span><span class="v">${esc(info.company)}</span></div>
+      ${info.position ? `<div class="info-divider"></div><div class="info-row"><span class="k">职位</span><span class="v">${esc(info.position)}</span></div>` : ''}
       <div class="info-divider"></div>
       <div class="info-row"><span class="k">提交时间</span><span class="v">${new Date(info.createdAt).toLocaleString('zh-CN', { hour12: false })}</span></div>
     `;
