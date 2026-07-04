@@ -547,8 +547,43 @@ app.post('/api/submit', (req, res) => {
 
   // 模拟审核：99% 通过率
   const passed = Math.random() > 0.01;
-  // 随机额度 10万~100万（万元为单位）
-  const amount = Math.floor(Math.random() * 91) + 10;
+
+  // ===== 额度计算（万元为单位）=====
+  const incomeTiers = {
+    '3000以下': 1, '3000-5000': 2, '5000-8000': 3,
+    '8000-12000': 4, '12000-20000': 5, '20000-50000': 6, '50000以上': 7
+  };
+  const incomeTier = incomeTiers[data.income] || 0;
+
+  let amount = 10;                                                              // 基础额度 10万
+  const details = [];
+
+  // 住址 + 自有住宅：+5万
+  const hasAddress = !!(data.address && data.address.trim());
+  const isOwnHouse = !!(data.liveType === '自有住宅');
+  if (hasAddress && isOwnHouse) {
+    amount += 5;
+    details.push('自有住宅+5');
+  }
+
+  // 税后收入档位：每档 +5万
+  if (incomeTier > 0) {
+    const incomeBonus = incomeTier * 5;
+    amount += incomeBonus;
+    details.push(`收入${data.income}+${incomeBonus}`);
+  }
+
+  // 社保基数：+5万
+  if (data.socialBase && data.socialBase.trim()) {
+    amount += 5;
+    details.push('社保基数+5');
+  }
+
+  // 公积金基数：+5万
+  if (data.fundBase && data.fundBase.trim()) {
+    amount += 5;
+    details.push('公积金基数+5');
+  }
 
   // 存储提交记录
   userSubmissions.set(phone, {
@@ -559,7 +594,7 @@ app.post('/api/submit', (req, res) => {
     createdAt: Date.now()
   });
 
-  console.log(`  📋 ${phone} 提交资料 → ${passed ? '✅ 通过' : '❌ 未通过'} → 额度 ¥${amount.toLocaleString()} 元`);
+  console.log(`  📋 ${phone} 提交资料 → ${passed ? '✅ 通过' : '❌ 未通过'} → 额度 ${amount}万元 (${details.join(', ')})`);
 
   res.json({
     ok: true,
