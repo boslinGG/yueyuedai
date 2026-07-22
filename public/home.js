@@ -43,7 +43,7 @@ async function init() {
 
 // ============ 渲染页面 ============
 function renderPage(data) {
-  const { phone, hasSubmitted, amount, approved, amountExpired, expiresAt, info } = data;
+  const { phone, hasSubmitted, amount, approved, amountExpired, expiresAt } = data;
 
   // 显示手机号（脱敏）
   const masked = phone.substring(0, 3) + '****' + phone.slice(-4);
@@ -110,19 +110,13 @@ function renderPage(data) {
     $('tipsText').textContent = '填写完整资料可获得更高额度评估。';
   }
 
-  // 用户资料卡片
-  if (info && hasSubmitted) {
+  // 预审批通过提示
+  if (hasSubmitted && approved) {
     const infoCard = $('infoCard');
     infoCard.style.display = 'block';
     $('infoContent').innerHTML = `
-      <div class="info-row"><span class="k">姓名</span><span class="v">${esc(info.name)}</span></div>
-      <div class="info-divider"></div>
-      <div class="info-row"><span class="k">身份证号</span><span class="v">${maskId(info.idCard)}</span></div>
-      <div class="info-divider"></div>
-      <div class="info-row"><span class="k">单位</span><span class="v">${esc(info.company)}</span></div>
-      ${info.position ? `<div class="info-divider"></div><div class="info-row"><span class="k">职位</span><span class="v">${esc(info.position)}</span></div>` : ''}
-      <div class="info-divider"></div>
-      <div class="info-row"><span class="k">提交时间</span><span class="v">${new Date(info.createdAt).toLocaleString('zh-CN', { hour12: false })}</span></div>
+      <div class="approve-badge">✅ 预审批通过</div>
+      <div class="approve-desc">您的资料已通过预审，额度已生效可随时使用</div>
     `;
   }
 }
