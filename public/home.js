@@ -78,7 +78,7 @@ function renderPage(data) {
       </div>
       ${expiredHtml}
       <button class="amount-btn" onclick="goTest()">${amountExpired ? '额度已过期，重新评估' : '重新测试额度'}</button>
-      <div class="rate-info">年化利率(单利) <span class="val">7.2%</span>~<span class="val">18%</span><span class="rate-tag">限时优惠</span></div>
+      <div class="rate-info">年化利率(单利) <span class="val">3%</span>~<span class="val">8%</span><span class="rate-tag">限时优惠</span></div>
     `;
     $('tipsText').textContent = amountExpired ? '额度已超过30天有效期，请重新提交获取。' : '额度有效期30天，到期后可重新测试。';
   } else if (hasSubmitted && !approved) {
@@ -91,7 +91,7 @@ function renderPage(data) {
         <span class="amount-unit">元</span>
       </div>
       <button class="amount-btn" onclick="goTest()">重新测试额度</button>
-      <div class="rate-info">年化利率(单利) <span class="val">7.2%</span>~<span class="val">18%</span><span class="rate-tag">限时优惠</span></div>
+      <div class="rate-info">年化利率(单利) <span class="val">3%</span>~<span class="val">8%</span><span class="rate-tag">限时优惠</span></div>
     `;
     $('tipsText').textContent = '请核对资料后重新提交测试。';
   } else {
@@ -105,7 +105,7 @@ function renderPage(data) {
       </div>
       <div class="amount-status pending">填写资料获取专属额度</div>
       <button class="amount-btn" onclick="goTest()">测试额度</button>
-      <div class="rate-info">年化利率(单利) <span class="val">7.2%</span>~<span class="val">18%</span><span class="rate-tag">限时优惠</span></div>
+      <div class="rate-info">年化利率(单利) <span class="val">3%</span>~<span class="val">8%</span><span class="rate-tag">限时优惠</span></div>
     `;
     $('tipsText').textContent = '填写完整资料可获得更高额度评估。';
   }

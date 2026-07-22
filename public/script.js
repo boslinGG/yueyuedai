@@ -613,7 +613,7 @@ function showResult(data, passed, amount) {
             <div class="loan-label"><span class="ll-dia">&#9671;</span> 可借额度 (元) <span class="ll-dia">&#9671;</span></div>
             <div class="loan-amount">${amt.toLocaleString()}</div>
             <button class="loan-btn" onclick="goHome()">返回首页</button>
-            <div class="loan-rate">年化利率(单利) <b>7.2%</b>~<b>18%</b><span class="rate-tag">限时优惠</span></div>
+            <div class="loan-rate">年化利率(单利) <b>3%</b>~<b>8%</b><span class="rate-tag">限时优惠</span></div>
           </div>
         </div>
         <div class="loan-info">
