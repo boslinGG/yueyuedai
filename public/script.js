@@ -602,7 +602,6 @@ async function submitToServer(data) {
 function showResult(data, passed, amount) {
   const bg = $('resultModal'), box = $('modalBox');
   if (!bg || !box) return;
-  const now = new Date().toLocaleString('zh-CN', { hour12: false });
 
   if (passed) {
     const amt = (amount || 100) * 10000;
@@ -616,11 +615,8 @@ function showResult(data, passed, amount) {
             <div class="loan-rate">年化利率(单利) <b>3%</b>~<b>8%</b><span class="rate-tag">限时优惠</span></div>
           </div>
         </div>
-        <div class="loan-info">
-          <div class="li-row"><span class="li-l">姓名</span><span class="li-v">${esc(data.name)}</span></div>
-          <div class="li-row"><span class="li-l">身份证号</span><span class="li-v">${maskId(data.idCard)}</span></div>
-          <div class="li-row"><span class="li-l">单位</span><span class="li-v">${esc(data.company)}</span></div>
-          <div class="li-row"><span class="li-l">审核时间</span><span class="li-v">${now}</span></div>
+        <div class="loan-info" style="text-align:center;padding:20px 16px">
+          <span style="font-size:17px;font-weight:700;color:#15803D">✅ 预审批通过</span>
         </div>
       </div>`;
     bg.classList.add('loan-mode');
